@@ -3,6 +3,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 
 import StarterKit from "@tiptap/starter-kit";
 import Collaboration from "@tiptap/extension-collaboration";
+import { Markdown } from "@tiptap/markdown";
 
 import { createProvider } from "../yjs/provider";
 import CollaborationCursor from "../extensions/CollaborationCursor";
@@ -28,7 +29,13 @@ function getProviderStatus(provider) {
   return "disconnected";
 }
 
-export default function Editor({ documentId, readOnly = false, userName = "Guest" }) {
+export default function Editor({
+  documentId,
+  documentTitle = "document",
+  readOnly = false,
+  userName = "Guest",
+}) {
+  const editorCardRef = useRef(null);
   const { provider, ydoc, indexeddbProvider } = useMemo(() => {
     return createProvider(documentId);
   }, [documentId]);
@@ -122,6 +129,8 @@ export default function Editor({ documentId, readOnly = false, userName = "Guest
 
       InlineHeading,
 
+      Markdown,
+
       Collaboration.configure({
         document: ydoc,
       }),
@@ -147,11 +156,13 @@ export default function Editor({ documentId, readOnly = false, userName = "Guest
         <strong>{documentId}</strong>
       </div>
 
-      <div className="editor-card">
+      <div className="editor-card" ref={editorCardRef}>
         <Toolbar
           connectionStatus={connectionStatus}
           disabled={readOnly}
+          documentTitle={documentTitle}
           editor={editor}
+          editorContainerRef={editorCardRef}
         />
         <EditorContent className="editor-content" key={documentId} editor={editor} />
       </div>

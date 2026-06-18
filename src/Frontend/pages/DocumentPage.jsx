@@ -353,6 +353,7 @@ export default function DocumentPage() {
       <div className="workspace-grid">
         <Editor
           documentId={id}
+          documentTitle={document.title}
           readOnly={!permissions.canEdit}
           userName={user.name}
         />

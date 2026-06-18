@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
 
 import ConnectionStatusBadge from "./ConnectionStatusBadge";
+import ExportDropdown from "./ExportDropdown";
 
-export default function Toolbar({ editor, disabled = false, connectionStatus = "connecting" }) {
+export default function Toolbar({
+  editor,
+  disabled = false,
+  connectionStatus = "connecting",
+  documentTitle = "document",
+  editorContainerRef,
+}) {
   const [, setVersion] = useState(0);
 
   useEffect(() => {
@@ -70,6 +77,11 @@ export default function Toolbar({ editor, disabled = false, connectionStatus = "
       </div>
 
       <div className="toolbar-group toolbar-group-right">
+        <ExportDropdown
+          documentTitle={documentTitle}
+          editor={editor}
+          editorContainerRef={editorContainerRef}
+        />
         <ConnectionStatusBadge status={connectionStatus} />
       </div>
     </div>

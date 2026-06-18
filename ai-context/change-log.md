@@ -1,5 +1,21 @@
 # Change Log
 
+## 2026-06-19 — Feature 3: Export (Markdown + PDF)
+
+- **Timestamp:** 2026-06-19
+- **Files changed:**
+  - `src/Frontend/lib/exportDocument.js` (new)
+  - `src/Frontend/components/ExportDropdown.jsx` (new)
+  - `src/Frontend/components/Editor.jsx`
+  - `src/Frontend/components/Toolbar.jsx`
+  - `src/Frontend/pages/DocumentPage.jsx`
+  - `src/Frontend/index.css`
+  - `package.json`
+  - `package-lock.json`
+- **Summary of change:** Added client-side Markdown and PDF export via toolbar dropdown, registered @tiptap/markdown on the editor, and hid collaboration UI during PDF generation.
+- **Impacted modules:** Editor toolbar, export utilities
+- **Risk level:** Low
+
 ## 2026-06-19 — Feature 2: Offline Support + Connection Status
 
 - **Timestamp:** 2026-06-19
