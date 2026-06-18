@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 
 import StarterKit from "@tiptap/starter-kit";
@@ -28,37 +28,64 @@ function getProviderStatus(provider) {
   return "disconnected";
 }
 
-function getStatusLabel(status) {
-  if (status === "synced") return "Live";
-  if (status === "connected") return "Connected";
-  if (status === "connecting") return "Connecting";
-
-  return "Offline";
-}
-
 export default function Editor({ documentId, readOnly = false, userName = "Guest" }) {
-  const { provider, ydoc } = useMemo(() => {
+  const { provider, ydoc, indexeddbProvider } = useMemo(() => {
     return createProvider(documentId);
   }, [documentId]);
   const [connectionStatus, setConnectionStatus] = useState(() =>
     getProviderStatus(provider)
   );
+  const [showOfflineToast, setShowOfflineToast] = useState(false);
+  const hasBeenSyncedRef = useRef(false);
+  const offlineToastTimeoutRef = useRef(null);
 
   useEffect(() => {
+    function showOfflineToastIfNeeded() {
+      if (!hasBeenSyncedRef.current) {
+        return;
+      }
+
+      setShowOfflineToast(true);
+      window.clearTimeout(offlineToastTimeoutRef.current);
+      offlineToastTimeoutRef.current = window.setTimeout(() => {
+        setShowOfflineToast(false);
+      }, 4000);
+    }
+
     const handleStatus = ({ status }) => {
       setConnectionStatus(status);
+
+      if (status === "synced") {
+        hasBeenSyncedRef.current = true;
+      }
+
+      if (status === "disconnected") {
+        showOfflineToastIfNeeded();
+      }
     };
 
     const handleSync = (isSynced) => {
-      setConnectionStatus(isSynced ? "synced" : "connected");
+      if (isSynced) {
+        hasBeenSyncedRef.current = true;
+        setConnectionStatus("synced");
+        return;
+      }
+
+      setConnectionStatus("connected");
     };
 
     const handleConnectionClose = () => {
-      setConnectionStatus(getProviderStatus(provider));
+      const nextStatus = getProviderStatus(provider);
+      setConnectionStatus(nextStatus);
+
+      if (nextStatus === "disconnected") {
+        showOfflineToastIfNeeded();
+      }
     };
 
     const handleConnectionError = () => {
       setConnectionStatus("disconnected");
+      showOfflineToastIfNeeded();
     };
 
     provider.on("status", handleStatus);
@@ -67,14 +94,16 @@ export default function Editor({ documentId, readOnly = false, userName = "Guest
     provider.on("connection-error", handleConnectionError);
 
     return () => {
+      window.clearTimeout(offlineToastTimeoutRef.current);
       provider.off("status", handleStatus);
       provider.off("sync", handleSync);
       provider.off("connection-close", handleConnectionClose);
       provider.off("connection-error", handleConnectionError);
+      indexeddbProvider.destroy();
       provider.destroy();
       ydoc.destroy();
     };
-  }, [provider, ydoc]);
+  }, [provider, ydoc, indexeddbProvider]);
 
   const cursorUser = useMemo(() => {
     return {
@@ -111,11 +140,6 @@ export default function Editor({ documentId, readOnly = false, userName = "Guest
           <p className="panel-kicker">Shared document</p>
           <h2>Focus editor</h2>
         </div>
-
-        <div className={`status-pill status-${connectionStatus}`}>
-          <span className="status-dot" />
-          {getStatusLabel(connectionStatus)}
-        </div>
       </div>
 
       <div className="document-meta">
@@ -124,9 +148,19 @@ export default function Editor({ documentId, readOnly = false, userName = "Guest
       </div>
 
       <div className="editor-card">
-        <Toolbar disabled={readOnly} editor={editor} />
+        <Toolbar
+          connectionStatus={connectionStatus}
+          disabled={readOnly}
+          editor={editor}
+        />
         <EditorContent className="editor-content" key={documentId} editor={editor} />
       </div>
+
+      {showOfflineToast ? (
+        <div className="offline-toast" role="status">
+          You&apos;re offline. Changes will sync when you reconnect.
+        </div>
+      ) : null}
     </section>
   );
 }

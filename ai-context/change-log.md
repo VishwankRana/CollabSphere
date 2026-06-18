@@ -1,5 +1,20 @@
 # Change Log
 
+## 2026-06-19 — Feature 2: Offline Support + Connection Status
+
+- **Timestamp:** 2026-06-19
+- **Files changed:**
+  - `src/Frontend/yjs/provider.js`
+  - `src/Frontend/components/ConnectionStatusBadge.jsx` (new)
+  - `src/Frontend/components/Editor.jsx`
+  - `src/Frontend/components/Toolbar.jsx`
+  - `src/Frontend/index.css`
+  - `package.json`
+  - `package-lock.json`
+- **Summary of change:** Added IndexedDB persistence via y-indexeddb for offline editing, WebSocket connection status tracking, a toolbar connection badge (Synced / Syncing / Offline), and an offline toast when connection drops after being synced.
+- **Impacted modules:** Yjs provider, editor toolbar, connection UI
+- **Risk level:** Medium
+
 ## 2026-06-19 — Fix version restore + consistent Versions UI
 
 - **Timestamp:** 2026-06-19

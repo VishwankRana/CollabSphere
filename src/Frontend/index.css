@@ -348,6 +348,94 @@ select {
     rgba(237, 246, 251, 0.95),
     rgba(255, 255, 255, 0.9)
   );
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toolbar-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.toolbar-group-right {
+  margin-left: auto;
+}
+
+.connection-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(44, 78, 104, 0.1);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  transition:
+    color 200ms ease,
+    border-color 200ms ease,
+    background 200ms ease;
+}
+
+.connection-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  transition: background-color 200ms ease;
+}
+
+.connection-synced .connection-status-dot {
+  background: #22c55e;
+}
+
+.connection-offline .connection-status-dot {
+  background: #94a3b8;
+}
+
+.connection-status-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(234, 179, 8, 0.25);
+  border-top-color: #eab308;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  animation: connection-status-spin 0.8s linear infinite;
+}
+
+.connection-syncing {
+  color: #a16207;
+}
+
+@keyframes connection-status-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.editor-panel {
+  position: relative;
+}
+
+.offline-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  max-width: calc(100% - 40px);
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: rgba(24, 50, 71, 0.92);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  box-shadow: 0 16px 32px rgba(24, 50, 71, 0.24);
+  z-index: 5;
 }
 
 .toolbar-button {
@@ -1075,8 +1163,11 @@ select {
     min-width: 0;
   }
 
-  .comment-count,
-  .status-pill {
+  .comment-count {
+    align-self: flex-start;
+  }
+
+  .connection-status-badge {
     align-self: flex-start;
   }
 

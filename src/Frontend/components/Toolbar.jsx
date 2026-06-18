@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
-export default function Toolbar({ editor, disabled = false }) {
+import ConnectionStatusBadge from "./ConnectionStatusBadge";
+
+export default function Toolbar({ editor, disabled = false, connectionStatus = "connecting" }) {
   const [, setVersion] = useState(0);
 
   useEffect(() => {
@@ -53,17 +55,23 @@ export default function Toolbar({ editor, disabled = false }) {
 
   return (
     <div className="toolbar">
-      {buttons.map((button) => (
-        <button
-          key={button.label}
-          className={button.active ? "toolbar-button active" : "toolbar-button"}
-          disabled={disabled}
-          onClick={button.action}
-          type="button"
-        >
-          {button.label}
-        </button>
-      ))}
+      <div className="toolbar-group">
+        {buttons.map((button) => (
+          <button
+            key={button.label}
+            className={button.active ? "toolbar-button active" : "toolbar-button"}
+            disabled={disabled}
+            onClick={button.action}
+            type="button"
+          >
+            {button.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="toolbar-group toolbar-group-right">
+        <ConnectionStatusBadge status={connectionStatus} />
+      </div>
     </div>
   );
 }
