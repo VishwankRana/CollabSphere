@@ -4,7 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { WebSocketServer } from "ws";
 import * as Y from "yjs";
-import { setPersistence, setupWSConnection } from "./yjsServerUtils.js";
+import { setPersistence, setupWSConnection, getDocumentYDoc } from "./yjsServerUtils.js";
 
 import { connectDB, getDatabaseStatus, isDatabaseConnected } from "./db.js";
 import { getBearerToken, hashPassword, signToken, verifyPassword, verifyToken } from "./auth.js";
@@ -12,6 +12,15 @@ import { canEditDocument, getUserRole, serializeCollaborator } from "./documents
 import User from "./models/User.js";
 import Document from "./models/Document.js";
 import DocumentContent from "./models/DocumentContent.js";
+import DocumentVersion from "./models/DocumentVersion.js";
+import {
+  loadYDocState,
+  maybeCreateAutoSnapshot,
+  restoreDocumentFromSnapshot,
+  saveDocumentVersion,
+  serializeVersion,
+  trackDocumentUpdate,
+} from "./versionHistory.js";
 
 // process.loadEnvFile?.(".env");
 dotenv.config();
@@ -68,17 +77,27 @@ setPersistence({
     name: "mongodb",
   },
   async bindState(docId, ydoc) {
-    const savedContent = await DocumentContent.findOne({ docId });
-
-    if (savedContent?.yjsState?.length) {
-      Y.applyUpdate(ydoc, new Uint8Array(savedContent.yjsState));
-    }
+    await loadYDocState(docId, ydoc);
 
     ydoc.on("update", async () => {
+      trackDocumentUpdate(docId, ydoc);
+
       try {
         await persistDocumentState(docId, ydoc);
       } catch (error) {
         console.error(`Failed to persist document ${docId}:`, error);
+      }
+
+      try {
+        const document = await Document.findOne({ docId }).select("_id");
+
+        if (!document) {
+          return;
+        }
+
+        await maybeCreateAutoSnapshot(document._id, docId, ydoc);
+      } catch (error) {
+        console.error(`Failed to auto-snapshot document ${docId}:`, error);
       }
     });
   },
@@ -296,6 +315,7 @@ app.delete(
 
     await Document.deleteOne({ _id: document._id });
     await DocumentContent.deleteOne({ docId: document.docId });
+    await DocumentVersion.deleteMany({ documentId: document._id });
 
     response.json({ message: "Document deleted." });
   }
@@ -412,6 +432,129 @@ app.patch(
 
     response.json({
       collaborators: document.collaborators.map(serializeCollaborator),
+    });
+  }
+);
+
+app.get(
+  "/api/documents/:docId/versions",
+  authenticateRequest,
+  async (request, response) => {
+    const document = await Document.findOne({ docId: request.params.docId });
+
+    if (!document) {
+      response.status(404).json({ message: "Document not found." });
+      return;
+    }
+
+    const role = getUserRole(document, request.user._id);
+
+    if (!role) {
+      response.status(403).json({ message: "You do not have access to this document." });
+      return;
+    }
+
+    const versions = await DocumentVersion.find({ documentId: document._id })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .select("_id authorName snapshotType label createdAt");
+
+    response.json({
+      versions: versions.map(serializeVersion),
+    });
+  }
+);
+
+app.post(
+  "/api/documents/:docId/versions/save",
+  authenticateRequest,
+  async (request, response) => {
+    const document = await Document.findOne({ docId: request.params.docId });
+
+    if (!document) {
+      response.status(404).json({ message: "Document not found." });
+      return;
+    }
+
+    const role = getUserRole(document, request.user._id);
+
+    if (!canEditDocument(role)) {
+      response.status(403).json({ message: "You do not have permission to save versions." });
+      return;
+    }
+
+    let ydoc = getDocumentYDoc(document.docId, { create: false });
+
+    if (!ydoc) {
+      ydoc = new Y.Doc();
+      await loadYDocState(document.docId, ydoc);
+    }
+
+    const version = await saveDocumentVersion({
+      documentId: document._id,
+      ydoc,
+      snapshotType: "manual",
+      label: request.body.label,
+      author: {
+        authorId: request.user._id,
+        authorName: request.user.name,
+      },
+    });
+
+    document.updatedAt = new Date();
+    await document.save();
+
+    response.status(201).json({
+      version: serializeVersion(version),
+    });
+  }
+);
+
+app.post(
+  "/api/documents/:docId/versions/:versionId/restore",
+  authenticateRequest,
+  async (request, response) => {
+    const document = await Document.findOne({ docId: request.params.docId });
+
+    if (!document) {
+      response.status(404).json({ message: "Document not found." });
+      return;
+    }
+
+    const role = getUserRole(document, request.user._id);
+
+    if (!canEditDocument(role)) {
+      response.status(403).json({ message: "You do not have permission to restore versions." });
+      return;
+    }
+
+    const version = await DocumentVersion.findById(request.params.versionId);
+
+    if (!version || String(version.documentId) !== String(document._id)) {
+      response.status(404).json({ message: "Version not found." });
+      return;
+    }
+
+    const ydoc = getDocumentYDoc(document.docId, { create: false });
+
+    if (ydoc) {
+      restoreDocumentFromSnapshot(ydoc, version.content);
+      await persistDocumentState(document.docId, ydoc);
+    } else {
+      await DocumentContent.findOneAndUpdate(
+        { docId: document.docId },
+        { docId: document.docId, yjsState: version.content },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
+
+    const restoredAt = new Date();
+    document.updatedAt = restoredAt;
+    await document.save();
+
+    response.json({
+      success: true,
+      restoredAt,
     });
   }
 );

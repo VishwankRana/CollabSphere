@@ -73,6 +73,14 @@ function getYDoc(docName, gc = true) {
   });
 }
 
+export function getDocumentYDoc(docName, { gc = true, create = true } = {}) {
+  if (!create && !docs.has(docName)) {
+    return null;
+  }
+
+  return getYDoc(docName, gc);
+}
+
 function closeConnection(doc, conn) {
   if (doc.conns.has(conn)) {
     const controlledIds = doc.conns.get(conn);

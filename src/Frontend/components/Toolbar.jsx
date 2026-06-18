@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 
-export default function Toolbar({ editor, disabled = false }) {
+export default function Toolbar({
+  editor,
+  disabled = false,
+  onOpenVersionHistory,
+}) {
   const [, setVersion] = useState(0);
 
   useEffect(() => {
@@ -53,17 +57,34 @@ export default function Toolbar({ editor, disabled = false }) {
 
   return (
     <div className="toolbar">
-      {buttons.map((button) => (
+      <div className="toolbar-group">
+        {buttons.map((button) => (
+          <button
+            key={button.label}
+            className={button.active ? "toolbar-button active" : "toolbar-button"}
+            disabled={disabled}
+            onClick={button.action}
+            type="button"
+          >
+            {button.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="toolbar-group toolbar-group-right">
         <button
-          key={button.label}
-          className={button.active ? "toolbar-button active" : "toolbar-button"}
-          disabled={disabled}
-          onClick={button.action}
+          className="toolbar-button toolbar-button-icon"
+          onClick={onOpenVersionHistory}
           type="button"
+          aria-label="Version history"
+          title="Version history"
         >
-          {button.label}
+          <span className="toolbar-icon" aria-hidden="true">
+            🕐
+          </span>
+          Version History
         </button>
-      ))}
+      </div>
     </div>
   );
 }
