@@ -1,5 +1,15 @@
 # Change Log
 
+## 2026-06-19 — Fix connection status stuck on Syncing
+
+- **Timestamp:** 2026-06-19
+- **Files changed:**
+  - `src/Frontend/yjs/provider.js`
+  - `src/Frontend/components/Editor.jsx`
+- **Summary of change:** Deferred WebSocket connect until IndexedDB finishes loading, derive badge status from provider.synced, and added a connected-state fallback when y-websocket never emits sync completion.
+- **Impacted modules:** Yjs provider, connection status UI
+- **Risk level:** Low
+
 ## 2026-06-19 — Feature 3: Export (Markdown + PDF)
 
 - **Timestamp:** 2026-06-19

@@ -17,7 +17,37 @@ export function createProvider(documentId) {
 
   const provider = new WebsocketProvider(websocketUrl, documentId, ydoc, {
     params: token ? { token } : {},
+    connect: false,
+    resyncInterval: 5000,
   });
 
+  function connectWebsocket() {
+    if (!provider.shouldConnect) {
+      provider.connect();
+    }
+  }
+
+  if (indexeddbProvider.synced) {
+    connectWebsocket();
+  } else {
+    indexeddbProvider.once("synced", connectWebsocket);
+  }
+
   return { provider, ydoc, indexeddbProvider };
+}
+
+export function getConnectionStatus(provider) {
+  if (!provider.wsconnected && !provider.wsconnecting) {
+    return "disconnected";
+  }
+
+  if (provider.synced) {
+    return "synced";
+  }
+
+  if (provider.wsconnecting) {
+    return "connecting";
+  }
+
+  return "connected";
 }

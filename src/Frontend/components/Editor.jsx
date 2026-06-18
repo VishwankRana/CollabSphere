@@ -5,7 +5,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Collaboration from "@tiptap/extension-collaboration";
 import { Markdown } from "@tiptap/markdown";
 
-import { createProvider } from "../yjs/provider";
+import { createProvider, getConnectionStatus } from "../yjs/provider";
 import CollaborationCursor from "../extensions/CollaborationCursor";
 import InlineHeading from "../extensions/InlineHeading";
 import Toolbar from "./Toolbar";
@@ -21,14 +21,6 @@ function createCursorUser(clientId) {
   };
 }
 
-function getProviderStatus(provider) {
-  if (provider.synced) return "synced";
-  if (provider.wsconnected) return "connected";
-  if (provider.wsconnecting) return "connecting";
-
-  return "disconnected";
-}
-
 export default function Editor({
   documentId,
   documentTitle = "document",
@@ -40,11 +32,12 @@ export default function Editor({
     return createProvider(documentId);
   }, [documentId]);
   const [connectionStatus, setConnectionStatus] = useState(() =>
-    getProviderStatus(provider)
+    getConnectionStatus(provider)
   );
   const [showOfflineToast, setShowOfflineToast] = useState(false);
   const hasBeenSyncedRef = useRef(false);
   const offlineToastTimeoutRef = useRef(null);
+  const syncFallbackTimeoutRef = useRef(null);
 
   useEffect(() => {
     function showOfflineToastIfNeeded() {
@@ -59,41 +52,69 @@ export default function Editor({
       }, 4000);
     }
 
-    const handleStatus = ({ status }) => {
-      setConnectionStatus(status);
+    function clearSyncFallback() {
+      window.clearTimeout(syncFallbackTimeoutRef.current);
+      syncFallbackTimeoutRef.current = null;
+    }
 
-      if (status === "synced") {
+    function scheduleSyncFallback() {
+      clearSyncFallback();
+
+      syncFallbackTimeoutRef.current = window.setTimeout(() => {
+        if (provider.wsconnected && !provider.synced) {
+          hasBeenSyncedRef.current = true;
+          setConnectionStatus("synced");
+        }
+      }, 2000);
+    }
+
+    function updateConnectionStatus() {
+      const nextStatus = getConnectionStatus(provider);
+      setConnectionStatus(nextStatus);
+
+      if (nextStatus === "synced") {
         hasBeenSyncedRef.current = true;
-      }
-
-      if (status === "disconnected") {
-        showOfflineToastIfNeeded();
-      }
-    };
-
-    const handleSync = (isSynced) => {
-      if (isSynced) {
-        hasBeenSyncedRef.current = true;
-        setConnectionStatus("synced");
+        clearSyncFallback();
         return;
       }
 
-      setConnectionStatus("connected");
+      if (nextStatus === "disconnected" && hasBeenSyncedRef.current) {
+        showOfflineToastIfNeeded();
+        clearSyncFallback();
+        return;
+      }
+
+      if (nextStatus === "connected") {
+        scheduleSyncFallback();
+      }
+    }
+
+    const handleStatus = ({ status }) => {
+      if (status === "connected") {
+        updateConnectionStatus();
+        window.setTimeout(updateConnectionStatus, 0);
+        window.setTimeout(updateConnectionStatus, 250);
+        return;
+      }
+
+      updateConnectionStatus();
+    };
+
+    const handleSync = () => {
+      updateConnectionStatus();
     };
 
     const handleConnectionClose = () => {
-      const nextStatus = getProviderStatus(provider);
-      setConnectionStatus(nextStatus);
-
-      if (nextStatus === "disconnected") {
-        showOfflineToastIfNeeded();
-      }
+      updateConnectionStatus();
     };
 
     const handleConnectionError = () => {
       setConnectionStatus("disconnected");
       showOfflineToastIfNeeded();
+      clearSyncFallback();
     };
+
+    updateConnectionStatus();
 
     provider.on("status", handleStatus);
     provider.on("sync", handleSync);
@@ -101,6 +122,7 @@ export default function Editor({
     provider.on("connection-error", handleConnectionError);
 
     return () => {
+      clearSyncFallback();
       window.clearTimeout(offlineToastTimeoutRef.current);
       provider.off("status", handleStatus);
       provider.off("sync", handleSync);
