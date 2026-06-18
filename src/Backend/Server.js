@@ -535,17 +535,16 @@ app.post(
       return;
     }
 
+    await DocumentContent.findOneAndUpdate(
+      { docId: document.docId },
+      { docId: document.docId, yjsState: version.content },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
     const ydoc = getDocumentYDoc(document.docId, { create: false });
 
     if (ydoc) {
       restoreDocumentFromSnapshot(ydoc, version.content);
-      await persistDocumentState(document.docId, ydoc);
-    } else {
-      await DocumentContent.findOneAndUpdate(
-        { docId: document.docId },
-        { docId: document.docId, yjsState: version.content },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
     }
 
     const restoredAt = new Date();

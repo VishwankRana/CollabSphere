@@ -523,22 +523,6 @@ select {
   margin-top: 4px;
 }
 
-.version-commit-button {
-  justify-self: start;
-  border: 0;
-  padding: 12px 18px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: white;
-  font-weight: 800;
-  box-shadow: 0 18px 32px rgba(37, 99, 235, 0.22);
-}
-
-.version-commit-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .version-history-toggle {
   display: inline-flex;
   align-items: center;
@@ -551,11 +535,6 @@ select {
 .version-history-toggle.is-active {
   border-color: rgba(31, 95, 122, 0.35);
   background: rgba(239, 247, 252, 0.95);
-}
-
-.toolbar-icon {
-  font-size: 15px;
-  line-height: 1;
 }
 
 .version-history-close {
@@ -628,7 +607,7 @@ select {
 }
 
 .version-dot-manual {
-  background: #2563eb;
+  background: var(--accent);
 }
 
 .version-dot-auto {
@@ -675,8 +654,8 @@ select {
 }
 
 .version-badge-manual {
-  background: rgba(37, 99, 235, 0.12);
-  color: #1d4ed8;
+  background: rgba(44, 125, 160, 0.14);
+  color: var(--accent-strong);
 }
 
 .version-badge-auto {
@@ -698,17 +677,11 @@ select {
 }
 
 .version-restore-button {
-  appearance: none;
-  border: 1px solid rgba(44, 78, 104, 0.12);
-  background: rgba(255, 255, 255, 0.95);
-  color: var(--accent-strong);
-  padding: 8px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 800;
   opacity: 0;
   pointer-events: none;
   transition: opacity 160ms ease;
+  padding: 8px 12px;
+  font-size: 12px;
 }
 
 .version-history-item:hover .version-restore-button,
@@ -734,17 +707,6 @@ select {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-}
-
-.versions-toast {
-  margin-top: 14px;
-  padding: 12px 16px;
-  border-radius: 18px;
-  background: rgba(24, 50, 71, 0.92);
-  color: white;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.5;
 }
 
 .comments-subtitle {
@@ -1101,8 +1063,7 @@ select {
   .hero-logout-button,
   .hero-delete-button,
   .hero-cancel-button,
-  .comment-submit,
-  .version-commit-button {
+  .comment-submit {
     width: 100%;
     justify-self: stretch;
     text-align: center;

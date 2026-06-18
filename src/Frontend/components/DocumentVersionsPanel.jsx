@@ -140,7 +140,7 @@ export default function DocumentVersionsPanel({ documentId, token, canEdit }) {
             }}
           />
           <button
-            className="version-commit-button"
+            className="comment-submit"
             disabled={committing}
             onClick={handleCommit}
             type="button"
@@ -160,9 +160,6 @@ export default function DocumentVersionsPanel({ documentId, token, canEdit }) {
         onClick={() => setIsHistoryOpen((open) => !open)}
         type="button"
       >
-        <span className="toolbar-icon" aria-hidden="true">
-          🕐
-        </span>
         {isHistoryOpen ? "Hide Version History" : "Version History"}
       </button>
 
@@ -221,7 +218,7 @@ export default function DocumentVersionsPanel({ documentId, token, canEdit }) {
 
                       {canEdit && !isCurrent && !isConfirming ? (
                         <button
-                          className="version-restore-button"
+                          className="hero-link-button version-restore-button"
                           onClick={() => setConfirmingVersionId(version._id)}
                           type="button"
                         >
@@ -264,9 +261,9 @@ export default function DocumentVersionsPanel({ documentId, token, canEdit }) {
       ) : null}
 
       {toastMessage ? (
-        <div className="versions-toast" role="status">
+        <p className="access-message" role="status">
           {toastMessage}
-        </div>
+        </p>
       ) : null}
     </aside>
   );

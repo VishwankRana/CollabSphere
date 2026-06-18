@@ -1,5 +1,17 @@
 # Change Log
 
+## 2026-06-19 — Fix version restore + consistent Versions UI
+
+- **Timestamp:** 2026-06-19
+- **Files changed:**
+  - `src/Backend/versionHistory.js`
+  - `src/Backend/Server.js`
+  - `src/Frontend/components/DocumentVersionsPanel.jsx`
+  - `src/Frontend/index.css`
+- **Summary of change:** Fixed restore to fully replace Yjs shared document content (so the editor updates live), aligned Commit/Restore/History buttons with existing app styles, and removed emoji usage.
+- **Impacted modules:** Version restore, Versions sidebar UI
+- **Risk level:** Medium
+
 ## 2026-06-19 — Version History UI moved to sidebar + Commit button
 
 - **Timestamp:** 2026-06-19

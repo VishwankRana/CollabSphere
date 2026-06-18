@@ -109,13 +109,86 @@ export async function saveDocumentVersion({
   return version;
 }
 
+function clearSharedType(type) {
+  if (type instanceof Y.XmlFragment || type instanceof Y.Array) {
+    if (type.length > 0) {
+      type.delete(0, type.length);
+    }
+    return;
+  }
+
+  if (type instanceof Y.Text) {
+    if (type.length > 0) {
+      type.delete(0, type.length);
+    }
+    return;
+  }
+
+  if (type instanceof Y.Map) {
+    type.forEach((_value, key) => {
+      type.delete(key);
+    });
+  }
+}
+
+function cloneSharedValue(value) {
+  if (value instanceof Y.AbstractType) {
+    return value.clone();
+  }
+
+  return value;
+}
+
+function copySharedType(target, source) {
+  clearSharedType(target);
+
+  if (source instanceof Y.XmlFragment || source instanceof Y.Array) {
+    if (source.length > 0) {
+      const items = [];
+
+      for (let index = 0; index < source.length; index += 1) {
+        items.push(cloneSharedValue(source.get(index)));
+      }
+
+      target.insert(0, items);
+    }
+    return;
+  }
+
+  if (source instanceof Y.Text) {
+    const text = source.toString();
+
+    if (text.length > 0) {
+      target.insert(0, text);
+    }
+    return;
+  }
+
+  if (source instanceof Y.Map) {
+    source.forEach((value, key) => {
+      target.set(key, cloneSharedValue(value));
+    });
+  }
+}
+
 export function restoreDocumentFromSnapshot(ydoc, snapshotBuffer) {
   const restoredDoc = new Y.Doc();
   Y.applyUpdate(restoredDoc, new Uint8Array(snapshotBuffer));
 
-  const stateVector = Y.encodeStateVector(ydoc);
-  const restoreUpdate = Y.encodeStateAsUpdate(restoredDoc, stateVector);
-  Y.applyUpdate(ydoc, restoreUpdate);
+  ydoc.transact(() => {
+    const restoredKeys = new Set(restoredDoc.share.keys());
+
+    for (const key of [...ydoc.share.keys()]) {
+      if (!restoredKeys.has(key)) {
+        clearSharedType(ydoc.get(key));
+      }
+    }
+
+    restoredDoc.share.forEach((sourceType, key) => {
+      const targetType = ydoc.get(key, sourceType.constructor);
+      copySharedType(targetType, sourceType);
+    });
+  }, "version-restore");
 }
 
 export async function loadYDocState(docId, ydoc) {
