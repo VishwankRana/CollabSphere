@@ -256,17 +256,10 @@ select {
 
 .editor-panel,
 .comments-panel,
-.access-panel {
+.access-panel,
+.versions-panel {
   height: 100%;
   padding: 24px;
-}
-
-.editor-panel {
-  position: relative;
-}
-
-.editor-panel.has-version-panel .editor-card {
-  margin-right: 320px;
 }
 
 .editor-panel,
@@ -355,30 +348,6 @@ select {
     rgba(237, 246, 251, 0.95),
     rgba(255, 255, 255, 0.9)
   );
-  justify-content: space-between;
-  align-items: center;
-}
-
-.toolbar-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
-
-.toolbar-group-right {
-  margin-left: auto;
-}
-
-.toolbar-button-icon {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.toolbar-icon {
-  font-size: 15px;
-  line-height: 1;
 }
 
 .toolbar-button {
@@ -542,20 +511,51 @@ select {
   }
 }
 
-.version-history-panel {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  bottom: 24px;
-  width: min(320px, calc(100% - 48px));
+.version-history-panel,
+.versions-panel {
   display: flex;
   flex-direction: column;
-  padding: 20px;
-  border-radius: 24px;
-  border: 1px solid rgba(44, 78, 104, 0.12);
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 18px 40px rgba(34, 71, 97, 0.14);
-  z-index: 4;
+}
+
+.version-commit-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.version-commit-button {
+  justify-self: start;
+  border: 0;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  font-weight: 800;
+  box-shadow: 0 18px 32px rgba(37, 99, 235, 0.22);
+}
+
+.version-commit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.version-history-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  width: 100%;
+  justify-content: center;
+}
+
+.version-history-toggle.is-active {
+  border-color: rgba(31, 95, 122, 0.35);
+  background: rgba(239, 247, 252, 0.95);
+}
+
+.toolbar-icon {
+  font-size: 15px;
+  line-height: 1;
 }
 
 .version-history-close {
@@ -736,19 +736,15 @@ select {
   gap: 10px;
 }
 
-.editor-toast {
-  position: absolute;
-  left: 50%;
-  bottom: 20px;
-  transform: translateX(-50%);
-  padding: 12px 18px;
-  border-radius: 999px;
+.versions-toast {
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: 18px;
   background: rgba(24, 50, 71, 0.92);
   color: white;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  box-shadow: 0 16px 32px rgba(24, 50, 71, 0.24);
-  z-index: 5;
+  line-height: 1.5;
 }
 
 .comments-subtitle {
@@ -1077,6 +1073,7 @@ select {
   .editor-panel,
   .comments-panel,
   .access-panel,
+  .versions-panel,
   .auth-card {
     border-radius: 22px;
     padding: 18px;
@@ -1104,7 +1101,8 @@ select {
   .hero-logout-button,
   .hero-delete-button,
   .hero-cancel-button,
-  .comment-submit {
+  .comment-submit,
+  .version-commit-button {
     width: 100%;
     justify-self: stretch;
     text-align: center;
@@ -1124,19 +1122,5 @@ select {
   .editor-content .tiptap {
     min-height: 420px;
     padding: 22px 18px;
-  }
-
-  .editor-panel.has-version-panel .editor-card {
-    margin-right: 0;
-  }
-
-  .version-history-panel {
-    position: fixed;
-    top: auto;
-    right: 16px;
-    left: 16px;
-    bottom: 16px;
-    width: auto;
-    max-height: 70vh;
   }
 }

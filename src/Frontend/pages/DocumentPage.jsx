@@ -5,6 +5,7 @@ import { useAuth } from "../auth/useAuth.jsx";
 import AccessPanel from "../components/AccessPanel";
 import Comments from "../components/Comments";
 import DocumentLibrary from "../components/DocumentLibrary.jsx";
+import DocumentVersionsPanel from "../components/DocumentVersionsPanel";
 import Editor from "../components/Editor";
 import { apiRequest } from "../lib/api";
 import { getDefaultDocumentPath } from "../lib/documents.js";
@@ -369,6 +370,11 @@ export default function DocumentPage() {
             currentRole={document.role}
             onAddCollaborator={handleAddCollaborator}
             owner={document.owner}
+          />
+          <DocumentVersionsPanel
+            canEdit={permissions.canEdit}
+            documentId={id}
+            token={token}
           />
           <Comments documentId={id} />
         </div>

@@ -8,8 +8,6 @@ import { createProvider } from "../yjs/provider";
 import CollaborationCursor from "../extensions/CollaborationCursor";
 import InlineHeading from "../extensions/InlineHeading";
 import Toolbar from "./Toolbar";
-import VersionHistoryPanel from "./VersionHistoryPanel";
-import { useAuth } from "../auth/useAuth.jsx";
 
 function formatColor(seed) {
   return `#${(seed & 0xffffff).toString(16).padStart(6, "0")}`;
@@ -39,15 +37,12 @@ function getStatusLabel(status) {
 }
 
 export default function Editor({ documentId, readOnly = false, userName = "Guest" }) {
-  const { token } = useAuth();
   const { provider, ydoc } = useMemo(() => {
     return createProvider(documentId);
   }, [documentId]);
   const [connectionStatus, setConnectionStatus] = useState(() =>
     getProviderStatus(provider)
   );
-  const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
     const handleStatus = ({ status }) => {
@@ -109,27 +104,8 @@ export default function Editor({ documentId, readOnly = false, userName = "Guest
     ],
   }, [provider, ydoc, cursorUser]);
 
-  useEffect(() => {
-    if (!toastMessage) {
-      return undefined;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setToastMessage("");
-    }, 4000);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [toastMessage]);
-
-  function handleRestoreSuccess(restoredAt) {
-    const timestamp = new Date(restoredAt).toLocaleString();
-    setToastMessage(`Document restored to ${timestamp} version`);
-  }
-
   return (
-    <section className={`editor-panel${isVersionHistoryOpen ? " has-version-panel" : ""}`}>
+    <section className="editor-panel">
       <div className="panel-header">
         <div>
           <p className="panel-kicker">Shared document</p>
@@ -148,28 +124,9 @@ export default function Editor({ documentId, readOnly = false, userName = "Guest
       </div>
 
       <div className="editor-card">
-        <Toolbar
-          disabled={readOnly}
-          editor={editor}
-          onOpenVersionHistory={() => setIsVersionHistoryOpen(true)}
-        />
+        <Toolbar disabled={readOnly} editor={editor} />
         <EditorContent className="editor-content" key={documentId} editor={editor} />
       </div>
-
-      <VersionHistoryPanel
-        canEdit={!readOnly}
-        documentId={documentId}
-        isOpen={isVersionHistoryOpen}
-        onClose={() => setIsVersionHistoryOpen(false)}
-        onRestoreSuccess={handleRestoreSuccess}
-        token={token}
-      />
-
-      {toastMessage ? (
-        <div className="editor-toast" role="status">
-          {toastMessage}
-        </div>
-      ) : null}
     </section>
   );
 }
