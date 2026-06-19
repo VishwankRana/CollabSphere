@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 
 import { useAuth } from "../auth/useAuth.jsx";
 import CodeOutputPanel from "../components/CodeOutputPanel";
+import ChatPanel from "../components/ChatPanel";
 import CollaborativeCodeEditor from "../components/CollaborativeCodeEditor";
 import LanguageSelector from "../components/LanguageSelector";
 import { apiRequest } from "../lib/api";
@@ -274,6 +275,8 @@ export default function InterviewRoomPage() {
           onStdinChange={setStdin}
         />
       </section>
+
+      <ChatPanel key={roomState.id} readOnly={readOnly} roomId={roomState.id} />
     </main>
   );
 }
