@@ -31,6 +31,13 @@ import { registerRoomHandlers } from "./socket/roomHandler.js";
 // process.loadEnvFile?.(".env");
 dotenv.config();
 
+if (!process.env.JDOODLE_CLIENT_ID || !process.env.JDOODLE_CLIENT_SECRET) {
+  console.warn(
+    "[WARNING] JDOODLE_CLIENT_ID or JDOODLE_CLIENT_SECRET is not set. " +
+      "Code execution will return errors until these are configured."
+  );
+}
+
 const PORT = Number(process.env.PORT || 1234);
 const ALLOW_START_WITHOUT_DB = process.env.ALLOW_START_WITHOUT_DB === "true";
 

@@ -245,7 +245,7 @@ export function createRoomsRouter(authenticateRequest) {
 
       response.json({ results });
     } catch (error) {
-      response.status(500).json({
+      response.status(503).json({
         message: "Unable to run test cases.",
         detail: error.message,
       });

@@ -30,7 +30,8 @@ export async function apiRequest(path, { method = "GET", token, body } = {}) {
   
 
   if (!response.ok) {
-    throw new Error(data.message || "Request failed.");
+    const detail = data.detail ? ` ${data.detail}` : "";
+    throw new Error(`${data.message || "Request failed."}${detail}`);
   }
 
   return data;

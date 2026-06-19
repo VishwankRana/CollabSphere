@@ -207,6 +207,13 @@ export function registerRoomHandlers(io) {
         const auth = await authorizeRoomSocket(socket, roomId);
 
         if (!auth) {
+          socket.emit("code:result", {
+            roomId,
+            stdout: "",
+            stderr: "You are not authorized to run code in this room.",
+            exitCode: 1,
+            executionTime: 0,
+          });
           return;
         }
 

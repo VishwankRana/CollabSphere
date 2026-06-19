@@ -1,59 +1,92 @@
-const PISTON_URL = "https://emkc.org/api/v2/piston/execute";
+const JDOODLE_URL = "https://api.jdoodle.com/v1/execute";
 
-const LANGUAGE_CONFIG = {
-  javascript: { language: "javascript", version: "*", filename: "main.js" },
-  python: { language: "python", version: "*", filename: "main.py" },
-  java: { language: "java", version: "*", filename: "Main.java" },
-  cpp: { language: "c++", version: "*", filename: "main.cpp" },
+const JDOODLE_LANGUAGES = {
+  javascript: { language: "nodejs", versionIndex: "4" },
+  python: { language: "python3", versionIndex: "3" },
+  java: { language: "java", versionIndex: "4" },
+  cpp: { language: "cpp17", versionIndex: "1" },
 };
 
 export async function executeCode(language, code, stdin = "") {
-  const config = LANGUAGE_CONFIG[language];
+  if (!process.env.JDOODLE_CLIENT_ID || !process.env.JDOODLE_CLIENT_SECRET) {
+    return {
+      stdout: "",
+      stderr: "No code executor configured. Set JDOODLE_CLIENT_ID and JDOODLE_CLIENT_SECRET.",
+      exitCode: 1,
+      executionTime: 0,
+      timedOut: false,
+    };
+  }
+
+  const config = JDOODLE_LANGUAGES[language];
 
   if (!config) {
     throw new Error(`Unsupported language: ${language}`);
   }
 
-  const startTime = Date.now();
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  let res;
 
   try {
-    const response = await fetch(PISTON_URL, {
+    res = await fetch(JDOODLE_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        language: config.language,
-        version: config.version,
-        files: [{ name: config.filename, content: code }],
+        clientId: process.env.JDOODLE_CLIENT_ID,
+        clientSecret: process.env.JDOODLE_CLIENT_SECRET,
+        script: code,
         stdin,
+        language: config.language,
+        versionIndex: config.versionIndex,
       }),
-      signal: controller.signal,
     });
-
-    if (!response.ok) {
-      throw new Error("Execution service unavailable. Please try again.");
-    }
-
-    const result = await response.json();
-    const executionTime = Date.now() - startTime;
-
+  } catch {
     return {
-      stdout: result.run?.stdout || "",
-      stderr: result.run?.stderr || "",
-      exitCode: result.run?.code ?? 1,
-      executionTime,
-      timedOut: result.run?.signal === "SIGKILL",
+      stdout: "",
+      stderr: "Code execution service is unreachable. Please try again.",
+      exitCode: 1,
+      executionTime: 0,
+      timedOut: false,
     };
-  } catch (error) {
-    if (error.name === "AbortError") {
-      throw new Error("Execution timed out after 15 seconds.");
-    }
-
-    throw error;
-  } finally {
-    clearTimeout(timeoutId);
   }
+
+  if (res.status === 401) {
+    return {
+      stdout: "",
+      stderr: "Code execution auth failed. Check JDOODLE_CLIENT_ID and CLIENT_SECRET.",
+      exitCode: 1,
+      executionTime: 0,
+      timedOut: false,
+    };
+  }
+
+  if (res.status === 429) {
+    return {
+      stdout: "",
+      stderr: "Daily execution limit reached (200/day). Try again tomorrow.",
+      exitCode: 1,
+      executionTime: 0,
+      timedOut: false,
+    };
+  }
+
+  if (!res.ok) {
+    return {
+      stdout: "",
+      stderr: `Execution service error (HTTP ${res.status}). Please try again.`,
+      exitCode: 1,
+      executionTime: 0,
+      timedOut: false,
+    };
+  }
+
+  const data = await res.json();
+  const output = data.output || "";
+
+  return {
+    stdout: data.isError ? "" : output,
+    stderr: data.isError ? output : "",
+    exitCode: data.isError ? 1 : 0,
+    executionTime: data.cpuTime ? Math.round(parseFloat(data.cpuTime) * 1000) : 0,
+    timedOut: false,
+  };
 }

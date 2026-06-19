@@ -116,6 +116,11 @@ export default function InterviewRoomPage() {
       setRunResult(result);
     };
 
+    const handleConnectError = () => {
+      setIsRunning(false);
+      setRunError("Lost connection to the interview server. Refresh the page and try again.");
+    };
+
     const handleRoomEnded = () => {
       setRoomState((current) =>
         current ? { ...current, status: "ended" } : current
@@ -142,6 +147,7 @@ export default function InterviewRoomPage() {
     socket.on("code:running", handleCodeRunning);
     socket.on("code:result", handleCodeResult);
     socket.on("room:ended", handleRoomEnded);
+    socket.on("connect_error", handleConnectError);
 
     if (roomState.role === "interviewer") {
       socket.on("cheat:flagged", handleCheatFlagged);
@@ -152,10 +158,31 @@ export default function InterviewRoomPage() {
       socket.off("code:running", handleCodeRunning);
       socket.off("code:result", handleCodeResult);
       socket.off("room:ended", handleRoomEnded);
+      socket.off("connect_error", handleConnectError);
       socket.off("cheat:flagged", handleCheatFlagged);
       leaveRoom();
     };
   }, [navigate, roomState?.id, roomState?.role, user.name]);
+
+  useEffect(() => {
+    if (!isRunning) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setIsRunning(false);
+      setRunResult({
+        stdout: "",
+        stderr: "Execution timed out waiting for a response from the server.",
+        exitCode: 1,
+        executionTime: 0,
+      });
+    }, 20000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [isRunning]);
 
   useEffect(() => {
     if (!cheatAlert) {
