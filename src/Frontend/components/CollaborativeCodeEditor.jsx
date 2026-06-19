@@ -6,6 +6,7 @@ import { createInterviewProvider } from "../yjs/interviewProvider";
 import {
   getAwarenessColor,
   getStarterCodeForLanguage,
+  isStarterOrEmpty,
   MONACO_LANGUAGE_IDS,
 } from "../lib/interview";
 
@@ -25,6 +26,12 @@ export default function CollaborativeCodeEditor({
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
   const starterAppliedRef = useRef(false);
+  const previousLanguageRef = useRef(language);
+  const starterCodeRef = useRef(starterCode);
+
+  useEffect(() => {
+    starterCodeRef.current = starterCode;
+  }, [starterCode]);
 
   useEffect(() => {
     starterAppliedRef.current = false;
@@ -64,17 +71,38 @@ export default function CollaborativeCodeEditor({
   useEffect(() => {
     const monaco = monacoRef.current;
     const editor = editorRef.current;
+    const ydoc = ydocRef.current;
     const monacoLanguage = MONACO_LANGUAGE_IDS[language] || "javascript";
+    const languageChanged = previousLanguageRef.current !== language;
 
-    if (!monaco || !editor) {
-      return;
+    if (monaco && editor) {
+      const model = editor.getModel();
+
+      if (model) {
+        monaco.editor.setModelLanguage(model, monacoLanguage);
+      }
     }
 
-    const model = editor.getModel();
+    if (languageChanged && ydoc) {
+      const yText = ydoc.getText("code");
+      const currentCode = yText.toString();
 
-    if (model) {
-      monaco.editor.setModelLanguage(model, monacoLanguage);
+      if (isStarterOrEmpty(currentCode, starterCodeRef.current)) {
+        const template = getStarterCodeForLanguage(language, starterCodeRef.current);
+
+        ydoc.transact(() => {
+          if (yText.length > 0) {
+            yText.delete(0, yText.length);
+          }
+
+          if (template) {
+            yText.insert(0, template);
+          }
+        });
+      }
     }
+
+    previousLanguageRef.current = language;
   }, [language]);
 
   const seedStarterCode = useCallback(() => {

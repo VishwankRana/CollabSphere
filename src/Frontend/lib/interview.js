@@ -20,6 +20,28 @@ export function getStarterCodeForLanguage(language, starterCode = {}) {
   );
 }
 
+export const INTERVIEW_LANGUAGES = [
+  { value: "javascript", label: "JavaScript" },
+  { value: "python", label: "Python" },
+  { value: "java", label: "Java" },
+  { value: "cpp", label: "C++" },
+];
+
 export function getAwarenessColor(role) {
   return role === "interviewer" ? "#7F77DD" : "#D85A30";
+}
+
+export function isStarterOrEmpty(content, starterCode = {}) {
+  const trimmed = content.trim();
+
+  if (!trimmed) {
+    return true;
+  }
+
+  const templates = {
+    ...DEFAULT_STARTER_CODE,
+    ...starterCode,
+  };
+
+  return Object.values(templates).some((template) => template.trim() === trimmed);
 }
