@@ -1060,6 +1060,131 @@ select {
   align-items: center;
 }
 
+.interview-replay-shell {
+  width: min(1280px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 36px 0 56px;
+  min-height: 100vh;
+  display: grid;
+  gap: 24px;
+}
+
+.interview-replay-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  padding: 28px 30px;
+  border-radius: 28px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.interview-replay-header h1 {
+  margin: 0;
+  font-family: "Instrument Serif", serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.interview-replay-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+  gap: 16px;
+  min-height: 520px;
+}
+
+.interview-replay-editor,
+.interview-replay-chat {
+  border-radius: 28px;
+  border: 1px solid rgba(44, 78, 104, 0.08);
+  background: #ffffff;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.interview-replay-editor {
+  min-height: 520px;
+}
+
+.interview-replay-editor .monaco-editor,
+.interview-replay-editor section {
+  height: 100% !important;
+  min-height: 520px;
+}
+
+.interview-replay-chat {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 20px 22px;
+  gap: 16px;
+}
+
+.interview-replay-chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.interview-replay-chat-header h2 {
+  margin: 0;
+  font-family: "Instrument Serif", serif;
+  font-weight: 400;
+  font-size: 1.6rem;
+}
+
+.interview-replay-chat-messages {
+  overflow-y: auto;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding-right: 4px;
+}
+
+.interview-replay-controls {
+  display: grid;
+  gap: 14px;
+  padding: 22px 24px;
+  border-radius: 28px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.interview-replay-time {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.interview-replay-time strong {
+  font-size: 1.2rem;
+}
+
+.interview-replay-time span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.interview-replay-scrubber {
+  width: 100%;
+  accent-color: #4d95b8;
+}
+
+.interview-replay-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.hero-link-button.is-active {
+  background: rgba(77, 149, 184, 0.16);
+  border-color: rgba(77, 149, 184, 0.32);
+}
+
 .collaborative-code-editor {
   height: min(56vh, 640px);
 }
@@ -1635,6 +1760,14 @@ select {
 
   .hero-actions {
     width: 100%;
+  }
+
+  .analytics-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .interview-replay-main {
+    grid-template-columns: 1fr;
   }
 }
 

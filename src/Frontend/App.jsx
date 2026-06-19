@@ -6,6 +6,7 @@ import { getDefaultDocumentPath } from "./lib/documents.js";
 import DocumentPage from "./pages/DocumentPage.jsx";
 import InterviewRoomPage from "./pages/InterviewRoomPage.jsx";
 import InterviewAnalyticsPage from "./pages/InterviewAnalyticsPage.jsx";
+import InterviewReplayPage from "./pages/InterviewReplayPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import SignupPage from "./pages/SignupPage.jsx";
 
@@ -30,6 +31,7 @@ function App() {
           <Route path="/docs/:id" element={<DocumentPage />} />
           <Route path="/rooms/:id" element={<InterviewRoomPage />} />
           <Route path="/rooms/:id/analytics" element={<InterviewAnalyticsPage />} />
+          <Route path="/rooms/:id/replay" element={<InterviewReplayPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -178,6 +178,9 @@ export default function InterviewAnalyticsPage() {
           <Link className="hero-link-button" to={`/rooms/${room.id}`}>
             Back to room
           </Link>
+          <Link className="hero-link-button" to={`/rooms/${room.id}/replay`}>
+            Open replay
+          </Link>
         </div>
       </section>
 
