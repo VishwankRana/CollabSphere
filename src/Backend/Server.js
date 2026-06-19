@@ -16,6 +16,7 @@ import DocumentContent from "./models/DocumentContent.js";
 import DocumentVersion from "./models/DocumentVersion.js";
 import InterviewRoom from "./models/InterviewRoom.js";
 import { getRoomRole } from "./interviewRooms.js";
+import { startInterviewSnapshotTimer } from "./interviewSnapshots.js";
 import {
   loadYDocState,
   maybeCreateAutoSnapshot,
@@ -92,6 +93,7 @@ setPersistence({
   },
   async bindState(docId, ydoc) {
     if (docId.startsWith("interview-")) {
+      startInterviewSnapshotTimer(docId.slice("interview-".length));
       return;
     }
 

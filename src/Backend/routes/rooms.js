@@ -12,6 +12,7 @@ import {
   sampleRecordingEvents,
   serializeRoom,
 } from "../interviewRooms.js";
+import { stopInterviewSnapshotTimer } from "../interviewSnapshots.js";
 import { executeCode } from "../services/codeExecution.js";
 
 function serializeRecordingEvent(event) {
@@ -358,6 +359,7 @@ export function createRoomsRouter(authenticateRequest) {
       room.status = "ended";
       room.endedAt = endedAt;
       await room.save();
+      stopInterviewSnapshotTimer(room._id);
 
       const durationMs = room.startedAt ? endedAt - room.startedAt : 0;
 
