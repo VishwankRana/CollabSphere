@@ -14,6 +14,8 @@ import User from "./models/User.js";
 import Document from "./models/Document.js";
 import DocumentContent from "./models/DocumentContent.js";
 import DocumentVersion from "./models/DocumentVersion.js";
+import InterviewRoom from "./models/InterviewRoom.js";
+import { getRoomRole } from "./interviewRooms.js";
 import {
   loadYDocState,
   maybeCreateAutoSnapshot,
@@ -89,6 +91,10 @@ setPersistence({
     name: "mongodb",
   },
   async bindState(docId, ydoc) {
+    if (docId.startsWith("interview-")) {
+      return;
+    }
+
     await loadYDocState(docId, ydoc);
 
     ydoc.on("update", async () => {
@@ -114,6 +120,10 @@ setPersistence({
     });
   },
   async writeState(docId, ydoc) {
+    if (docId.startsWith("interview-")) {
+      return;
+    }
+
     await persistDocumentState(docId, ydoc);
   },
 });
@@ -580,13 +590,26 @@ wss.on("connection", async (conn, req) => {
     }
 
     const requestUrl = new URL(req.url || "/", `http://${req.headers.host}`);
-    const docId = requestUrl.pathname.slice(1);
+    const docId = requestUrl.pathname.slice(1).split("?")[0];
     const token = requestUrl.searchParams.get("token");
     const payload = verifyToken(token);
     const user = await User.findById(payload.sub);
 
     if (!user) {
       conn.close(1008, "Unauthorized");
+      return;
+    }
+
+    if (docId.startsWith("interview-")) {
+      const roomId = docId.slice("interview-".length);
+      const room = await InterviewRoom.findById(roomId);
+
+      if (!room || !getRoomRole(room, user._id)) {
+        conn.close(1008, "Forbidden");
+        return;
+      }
+
+      setupWSConnection(conn, req);
       return;
     }
 

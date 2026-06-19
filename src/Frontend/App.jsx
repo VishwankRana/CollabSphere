@@ -4,6 +4,7 @@ import { useAuth } from "./auth/useAuth.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { getDefaultDocumentPath } from "./lib/documents.js";
 import DocumentPage from "./pages/DocumentPage.jsx";
+import InterviewRoomPage from "./pages/InterviewRoomPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import SignupPage from "./pages/SignupPage.jsx";
 
@@ -26,6 +27,7 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/docs/:id" element={<DocumentPage />} />
+          <Route path="/rooms/:id" element={<InterviewRoomPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
