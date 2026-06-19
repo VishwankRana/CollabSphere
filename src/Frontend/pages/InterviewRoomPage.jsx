@@ -11,6 +11,7 @@ import {
   getInterviewSocket,
   joinInterviewSocketRoom,
 } from "../lib/interviewSocket";
+import { CHEAT_ALERT_LABELS, useAntiCheat } from "../hooks/useAntiCheat";
 
 export default function InterviewRoomPage() {
   const { id } = useParams();
@@ -27,6 +28,15 @@ export default function InterviewRoomPage() {
   const [testResults, setTestResults] = useState(null);
   const [runError, setRunError] = useState("");
   const [isRunningTests, setIsRunningTests] = useState(false);
+  const [cheatAlert, setCheatAlert] = useState("");
+
+  const isCandidate =
+    roomState?.role === "candidate" && roomState?.status !== "ended";
+
+  useAntiCheat({
+    roomId: roomState?.id,
+    enabled: Boolean(roomState?.id && isCandidate),
+  });
 
   useEffect(() => {
     if (!id || !token) {
@@ -97,13 +107,40 @@ export default function InterviewRoomPage() {
     socket.on("code:running", handleCodeRunning);
     socket.on("code:result", handleCodeResult);
 
+    const handleCheatFlagged = ({ type }) => {
+      if (roomState.role !== "interviewer") {
+        return;
+      }
+
+      setCheatAlert(CHEAT_ALERT_LABELS[type] || "Candidate activity flagged.");
+    };
+
+    if (roomState.role === "interviewer") {
+      socket.on("cheat:flagged", handleCheatFlagged);
+    }
+
     return () => {
       socket.off("language:changed", handleLanguageChanged);
       socket.off("code:running", handleCodeRunning);
       socket.off("code:result", handleCodeResult);
+      socket.off("cheat:flagged", handleCheatFlagged);
       leaveRoom();
     };
-  }, [roomState?.id, user.name]);
+  }, [roomState?.id, roomState?.role, user.name]);
+
+  useEffect(() => {
+    if (!cheatAlert) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setCheatAlert("");
+    }, 5000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [cheatAlert]);
 
   function handleLanguageChange(nextLanguage) {
     if (!roomState || nextLanguage === language) {
@@ -201,6 +238,12 @@ export default function InterviewRoomPage() {
 
   return (
     <main className="interview-room-shell">
+      {cheatAlert ? (
+        <div className="interview-cheat-toast" role="status">
+          {cheatAlert}
+        </div>
+      ) : null}
+
       <section className="interview-room-header">
         <div>
           <p className="panel-kicker">Interview room</p>
