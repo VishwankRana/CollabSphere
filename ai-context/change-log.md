@@ -1,5 +1,16 @@
 # Change Log
 
+## 2026-06-19 — Module 1: Interview platform MongoDB models
+
+- **Timestamp:** 2026-06-19
+- **Files changed:**
+  - `src/Backend/models/InterviewRoom.js` (new)
+  - `src/Backend/models/RecordingEvent.js` (new)
+  - `src/Backend/models/CheatLog.js` (new)
+- **Summary of change:** Added Mongoose models for interview rooms, recording events, and cheat logs to support the coding interview platform alongside the existing document editor.
+- **Impacted modules:** Backend data layer
+- **Risk level:** Low
+
 ## 2026-06-19 — Fix connection status stuck on Syncing
 
 - **Timestamp:** 2026-06-19

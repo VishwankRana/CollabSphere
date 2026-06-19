@@ -2,6 +2,7 @@ import http from "http";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { Server as SocketIOServer } from "socket.io";
 import { WebSocketServer } from "ws";
 import * as Y from "yjs";
 import { setPersistence, setupWSConnection, getDocumentYDoc } from "./yjsServerUtils.js";
@@ -21,6 +22,8 @@ import {
   serializeVersion,
   trackDocumentUpdate,
 } from "./versionHistory.js";
+import { createRoomsRouter, setInterviewSocketIO } from "./routes/rooms.js";
+import { registerRoomHandlers } from "./socket/roomHandler.js";
 
 // process.loadEnvFile?.(".env");
 dotenv.config();
@@ -31,6 +34,15 @@ const ALLOW_START_WITHOUT_DB = process.env.ALLOW_START_WITHOUT_DB === "true";
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || true,
+    credentials: true,
+  },
+});
+
+registerRoomHandlers(io);
+setInterviewSocketIO(io);
 
 async function persistDocumentState(docId, ydoc) {
   const state = Buffer.from(Y.encodeStateAsUpdate(ydoc));
@@ -558,6 +570,8 @@ app.post(
   }
 );
 
+app.use("/api/rooms", createRoomsRouter(authenticateRequest));
+
 wss.on("connection", async (conn, req) => {
   try {
     if (!isDatabaseConnected()) {
@@ -602,7 +616,7 @@ async function startServer() {
 
   server.listen(PORT, () => {
     console.log(
-      `API and Yjs WebSocket server running on port ${PORT}${
+      `API, Socket.IO, and Yjs WebSocket server running on port ${PORT}${
         isDatabaseConnected() ? "" : " (database unavailable)"
       }`
     );
