@@ -671,9 +671,15 @@ select {
   font-size: 14px;
 }
 
-.interview-editor-panel {
+.interview-workspace {
+  display: grid;
+  grid-template-rows: minmax(420px, 1fr) auto;
+  gap: 16px;
   flex: 1;
-  min-height: 560px;
+}
+
+.interview-editor-panel {
+  min-height: 420px;
   border-radius: 28px;
   border: 1px solid rgba(44, 78, 104, 0.08);
   background: #ffffff;
@@ -681,8 +687,121 @@ select {
   box-shadow: var(--shadow);
 }
 
+.code-output-panel {
+  border-radius: 24px;
+  border: 1px solid rgba(44, 78, 104, 0.08);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow);
+  padding: 20px 22px;
+  display: grid;
+  gap: 14px;
+}
+
+.code-output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.code-output-header .panel-kicker {
+  margin: 0;
+}
+
+.code-output-status {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.code-output-stdin {
+  display: grid;
+  gap: 8px;
+}
+
+.code-output-stdin span,
+.code-output-block span,
+.code-test-details span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.code-output-stdin textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 56px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(44, 78, 104, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  font: inherit;
+}
+
+.code-output-body {
+  display: grid;
+  gap: 12px;
+}
+
+.code-output-block pre,
+.code-test-details pre {
+  margin: 6px 0 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(24, 50, 71, 0.05);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+}
+
+.code-output-stderr {
+  color: #9b2c2c;
+}
+
+.code-output-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.code-test-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.code-test-results li {
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(44, 78, 104, 0.1);
+}
+
+.code-test-pass {
+  background: rgba(47, 133, 90, 0.08);
+}
+
+.code-test-fail {
+  background: rgba(216, 90, 48, 0.08);
+}
+
+.code-test-details {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.code-test-details p {
+  margin: 0;
+}
+
 .collaborative-code-editor {
-  height: min(72vh, 760px);
+  height: min(56vh, 640px);
 }
 
 .collaborative-code-editor .monaco-editor,

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from "react";
 import Editor from "@monaco-editor/react";
 import { MonacoBinding } from "y-monaco";
 
@@ -10,15 +10,18 @@ import {
   MONACO_LANGUAGE_IDS,
 } from "../lib/interview";
 
-export default function CollaborativeCodeEditor({
-  roomId,
-  language = "javascript",
-  readOnly = false,
-  userName = "Guest",
-  userRole = "candidate",
-  starterCode = {},
-  onEditorMount,
-}) {
+const CollaborativeCodeEditor = forwardRef(function CollaborativeCodeEditor(
+  {
+    roomId,
+    language = "javascript",
+    readOnly = false,
+    userName = "Guest",
+    userRole = "candidate",
+    starterCode = {},
+    onEditorMount,
+  },
+  ref
+) {
   const ydocRef = useRef(null);
   const providerRef = useRef(null);
   const indexeddbProviderRef = useRef(null);
@@ -105,6 +108,10 @@ export default function CollaborativeCodeEditor({
     previousLanguageRef.current = language;
   }, [language]);
 
+  useImperativeHandle(ref, () => ({
+    getCode: () => ydocRef.current?.getText("code").toString() || "",
+  }));
+
   const seedStarterCode = useCallback(() => {
     const ydoc = ydocRef.current;
 
@@ -174,4 +181,6 @@ export default function CollaborativeCodeEditor({
       />
     </div>
   );
-}
+});
+
+export default CollaborativeCodeEditor;

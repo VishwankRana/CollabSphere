@@ -4,6 +4,7 @@ import InterviewRoom from "../models/InterviewRoom.js";
 import RecordingEvent from "../models/RecordingEvent.js";
 import CheatLog from "../models/CheatLog.js";
 import User from "../models/User.js";
+import { executeCode } from "../services/codeExecution.js";
 
 const VALID_LANGUAGES = new Set(["javascript", "python", "java", "cpp"]);
 const VALID_CHEAT_TYPES = new Set(["tab_switch", "focus_loss", "paste", "inactivity"]);
@@ -209,18 +210,51 @@ export function registerRoomHandlers(io) {
           return;
         }
 
+        const resolvedLanguage = language || auth.room.language;
+        const resolvedCode = code || "";
+        const resolvedStdin = stdin || "";
+
         io.to(getRoomChannel(roomId)).emit("code:running", { roomId });
 
-        io.to(getRoomChannel(roomId)).emit("code:result", {
-          roomId,
-          stdout: "",
-          stderr: "Code execution is not configured yet. It will be enabled in the next module.",
-          exitCode: 1,
-          executionTime: 0,
-          language: language || auth.room.language,
-          stdin: stdin || "",
-          code: code || "",
-        });
+        try {
+          const result = await executeCode(resolvedLanguage, resolvedCode, resolvedStdin);
+
+          io.to(getRoomChannel(roomId)).emit("code:result", {
+            ...result,
+            roomId,
+          });
+
+          await RecordingEvent.create({
+            roomId,
+            timestamp: new Date(),
+            type: "code_run",
+            userId: socket.data.user._id,
+            userRole: auth.role,
+            payload: {
+              code: resolvedCode,
+              language: resolvedLanguage,
+              stdin: resolvedStdin,
+              stdout: result.stdout,
+              stderr: result.stderr,
+              exitCode: result.exitCode,
+              executionTime: result.executionTime,
+            },
+          });
+        } catch (executionError) {
+          const stderr =
+            executionError.message?.includes("timeout") ||
+            executionError.message?.includes("timed out")
+              ? "Execution timed out after 15 seconds."
+              : executionError.message || "Execution service unavailable. Please try again.";
+
+          io.to(getRoomChannel(roomId)).emit("code:result", {
+            roomId,
+            stdout: "",
+            stderr,
+            exitCode: 1,
+            executionTime: 0,
+          });
+        }
       } catch (error) {
         console.error("code:run failed:", error);
       }

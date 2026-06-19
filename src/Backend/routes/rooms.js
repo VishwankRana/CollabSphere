@@ -12,6 +12,7 @@ import {
   sampleRecordingEvents,
   serializeRoom,
 } from "../interviewRooms.js";
+import { executeCode } from "../services/codeExecution.js";
 
 function serializeRecordingEvent(event) {
   return {
@@ -174,6 +175,77 @@ export function createRoomsRouter(authenticateRequest) {
     } catch (error) {
       response.status(500).json({
         message: "Unable to load interview recording.",
+        detail: error.message,
+      });
+    }
+  });
+
+  router.post("/:id/run-tests", authenticateRequest, async (request, response) => {
+    try {
+      const room = await InterviewRoom.findById(request.params.id);
+
+      if (!room) {
+        response.status(404).json({ message: "Interview room not found." });
+        return;
+      }
+
+      const role = getRoomRole(room, request.user._id);
+
+      if (!role) {
+        response.status(403).json({ message: "You do not have access to this interview room." });
+        return;
+      }
+
+      if (room.status === "ended") {
+        response.status(400).json({ message: "This interview has already ended." });
+        return;
+      }
+
+      const { code, language } = request.body;
+
+      if (!code?.trim()) {
+        response.status(400).json({ message: "Code is required to run tests." });
+        return;
+      }
+
+      const resolvedLanguage = language || room.language;
+      const testCases = room.testCases || [];
+
+      if (testCases.length === 0) {
+        response.json({ results: [] });
+        return;
+      }
+
+      const results = await Promise.all(
+        testCases.map(async (testCase) => {
+          const result = await executeCode(resolvedLanguage, code, testCase.input || "");
+          const passed = result.stdout.trim() === (testCase.expectedOutput || "").trim();
+
+          const fullResult = {
+            input: testCase.input,
+            expectedOutput: testCase.expectedOutput,
+            actualOutput: result.stdout,
+            stderr: result.stderr,
+            exitCode: result.exitCode,
+            passed,
+            isHidden: Boolean(testCase.isHidden),
+          };
+
+          if (role === "candidate" && testCase.isHidden) {
+            return {
+              passed,
+              isHidden: true,
+            };
+          }
+
+          return fullResult;
+        })
+      );
+
+      response.json({ results });
+    } catch (error) {
+      response.status(500).json({
+        message: "Unable to run test cases.",
         detail: error.message,
       });
     }

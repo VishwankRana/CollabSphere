@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { useAuth } from "../auth/useAuth.jsx";
+import CodeOutputPanel from "../components/CodeOutputPanel";
 import CollaborativeCodeEditor from "../components/CollaborativeCodeEditor";
 import LanguageSelector from "../components/LanguageSelector";
 import { apiRequest } from "../lib/api";
@@ -13,11 +14,18 @@ import {
 export default function InterviewRoomPage() {
   const { id } = useParams();
   const { token, user } = useAuth();
+  const editorRef = useRef(null);
   const [roomState, setRoomState] = useState(null);
   const [language, setLanguage] = useState("javascript");
   const [languageMessage, setLanguageMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [stdin, setStdin] = useState("");
+  const [isRunning, setIsRunning] = useState(false);
+  const [runResult, setRunResult] = useState(null);
+  const [testResults, setTestResults] = useState(null);
+  const [runError, setRunError] = useState("");
+  const [isRunningTests, setIsRunningTests] = useState(false);
 
   useEffect(() => {
     if (!id || !token) {
@@ -73,10 +81,25 @@ export default function InterviewRoomPage() {
       }
     };
 
+    const handleCodeRunning = () => {
+      setIsRunning(true);
+      setRunError("");
+      setTestResults(null);
+    };
+
+    const handleCodeResult = (result) => {
+      setIsRunning(false);
+      setRunResult(result);
+    };
+
     socket.on("language:changed", handleLanguageChanged);
+    socket.on("code:running", handleCodeRunning);
+    socket.on("code:result", handleCodeResult);
 
     return () => {
       socket.off("language:changed", handleLanguageChanged);
+      socket.off("code:running", handleCodeRunning);
+      socket.off("code:result", handleCodeResult);
       leaveRoom();
     };
   }, [roomState?.id, user.name]);
@@ -100,6 +123,58 @@ export default function InterviewRoomPage() {
     }
   }
 
+  function handleRunCode() {
+    if (!roomState || roomState.status === "ended" || isRunning) {
+      return;
+    }
+
+    const code = editorRef.current?.getCode() || "";
+
+    setRunResult(null);
+    setTestResults(null);
+    setRunError("");
+    setIsRunning(true);
+
+    getInterviewSocket().emit("code:run", {
+      roomId: roomState.id,
+      code,
+      language,
+      stdin,
+    });
+  }
+
+  async function handleRunTests() {
+    if (!roomState || roomState.status === "ended" || isRunningTests || isRunning) {
+      return;
+    }
+
+    const code = editorRef.current?.getCode() || "";
+
+    if (!code.trim()) {
+      setRunError("Write some code before running tests.");
+      return;
+    }
+
+    setRunResult(null);
+    setTestResults(null);
+    setRunError("");
+    setIsRunningTests(true);
+
+    try {
+      const data = await apiRequest(`/api/rooms/${roomState.id}/run-tests`, {
+        method: "POST",
+        token,
+        body: { code, language },
+      });
+
+      setTestResults(data.results || []);
+    } catch (requestError) {
+      setRunError(requestError.message);
+    } finally {
+      setIsRunningTests(false);
+    }
+  }
+
   if (loading) {
     return <main className="auth-shell">Loading interview room...</main>;
   }
@@ -120,6 +195,8 @@ export default function InterviewRoomPage() {
 
   const readOnly = roomState.status === "ended";
   const canChangeLanguage = roomState.role === "interviewer" && !readOnly;
+  const canRunCode = !readOnly;
+  const hasTestCases = (roomState.testCases?.length || 0) > 0;
 
   return (
     <main className="interview-room-shell">
@@ -142,6 +219,29 @@ export default function InterviewRoomPage() {
             onChange={handleLanguageChange}
           />
 
+          {canRunCode ? (
+            <>
+              <button
+                type="button"
+                className="comment-submit"
+                disabled={isRunning}
+                onClick={handleRunCode}
+              >
+                {isRunning ? "Running..." : "Run"}
+              </button>
+              {hasTestCases ? (
+                <button
+                  type="button"
+                  className="hero-link-button"
+                  disabled={isRunningTests || isRunning}
+                  onClick={handleRunTests}
+                >
+                  {isRunningTests ? "Running tests..." : "Run tests"}
+                </button>
+              ) : null}
+            </>
+          ) : null}
+
           {roomState.role === "interviewer" && roomState.inviteToken ? (
             <div className="interview-invite-chip">
               Invite code: <strong>{roomState.inviteToken}</strong>
@@ -150,14 +250,28 @@ export default function InterviewRoomPage() {
         </div>
       </section>
 
-      <section className="interview-editor-panel">
-        <CollaborativeCodeEditor
-          language={language}
+      {runError ? <p className="access-message">{runError}</p> : null}
+
+      <section className="interview-workspace">
+        <div className="interview-editor-panel">
+          <CollaborativeCodeEditor
+            ref={editorRef}
+            language={language}
+            readOnly={readOnly}
+            roomId={roomState.id}
+            starterCode={roomState.starterCode}
+            userName={user.name}
+            userRole={roomState.role}
+          />
+        </div>
+
+        <CodeOutputPanel
+          isRunning={isRunning}
           readOnly={readOnly}
-          roomId={roomState.id}
-          starterCode={roomState.starterCode}
-          userName={user.name}
-          userRole={roomState.role}
+          result={runResult}
+          stdin={stdin}
+          testResults={testResults}
+          onStdinChange={setStdin}
         />
       </section>
     </main>
