@@ -2,17 +2,16 @@ import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../auth/useAuth.jsx";
-import { getDefaultDocumentPath } from "../lib/documents.js";
 
 export default function SignupPage() {
-  const { isAuthenticated, signup, user } = useAuth();
+  const { isAuthenticated, signup } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   if (isAuthenticated) {
-    return <Navigate to={getDefaultDocumentPath(user)} replace />;
+    return <Navigate to="/" replace />;
   }
 
   async function handleSubmit(event) {
@@ -21,8 +20,8 @@ export default function SignupPage() {
     setError("");
 
     try {
-      const authenticatedUser = await signup(form);
-      navigate(getDefaultDocumentPath(authenticatedUser), { replace: true });
+      await signup(form);
+      navigate("/", { replace: true });
     } catch (submissionError) {
       setError(submissionError.message);
     } finally {
