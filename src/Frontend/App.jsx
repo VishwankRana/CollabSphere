@@ -5,6 +5,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { getDefaultDocumentPath } from "./lib/documents.js";
 import DocumentPage from "./pages/DocumentPage.jsx";
 import InterviewRoomPage from "./pages/InterviewRoomPage.jsx";
+import InterviewAnalyticsPage from "./pages/InterviewAnalyticsPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import SignupPage from "./pages/SignupPage.jsx";
 
@@ -28,6 +29,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/docs/:id" element={<DocumentPage />} />
           <Route path="/rooms/:id" element={<InterviewRoomPage />} />
+          <Route path="/rooms/:id/analytics" element={<InterviewAnalyticsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

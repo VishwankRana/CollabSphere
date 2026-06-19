@@ -933,6 +933,133 @@ select {
   min-height: 72px;
 }
 
+.interview-analytics-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 36px 0 56px;
+  min-height: 100vh;
+  display: grid;
+  gap: 24px;
+}
+
+.interview-analytics-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  padding: 28px 30px;
+  border-radius: 28px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.interview-analytics-header h1 {
+  margin: 0;
+  font-family: "Instrument Serif", serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.analytics-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.analytics-stat-card {
+  padding: 22px 24px;
+  border-radius: 24px;
+  border: 1px solid rgba(44, 78, 104, 0.08);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow);
+}
+
+.analytics-stat-card .panel-kicker {
+  margin-bottom: 12px;
+}
+
+.analytics-stat-card strong {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  line-height: 1.1;
+}
+
+.analytics-panel {
+  padding: 24px 26px;
+  border-radius: 28px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 16px;
+}
+
+.analytics-panel-header h2 {
+  margin: 0 0 8px;
+  font-family: "Instrument Serif", serif;
+  font-weight: 400;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+.analytics-timeline {
+  display: grid;
+  gap: 10px;
+}
+
+.analytics-timeline-track {
+  position: relative;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(24, 50, 71, 0.08);
+}
+
+.analytics-timeline-dot {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  border: 2px solid white;
+  box-shadow: 0 4px 10px rgba(24, 50, 71, 0.18);
+}
+
+.analytics-timeline-dot.is-passed {
+  background: #2f855a;
+}
+
+.analytics-timeline-dot.is-failed {
+  background: #d85a30;
+}
+
+.analytics-timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.analytics-flag-list {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text);
+  line-height: 1.8;
+}
+
+.analytics-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.analytics-notes-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
 .collaborative-code-editor {
   height: min(56vh, 640px);
 }

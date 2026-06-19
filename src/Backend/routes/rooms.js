@@ -392,6 +392,38 @@ export function createRoomsRouter(authenticateRequest) {
     }
   });
 
+  router.patch("/:id", authenticateRequest, async (request, response) => {
+    try {
+      const room = await InterviewRoom.findById(request.params.id)
+        .populate("interviewerId", "name email")
+        .populate("candidateId", "name email");
+
+      if (!room) {
+        response.status(404).json({ message: "Interview room not found." });
+        return;
+      }
+
+      if (!isInterviewer(room, request.user._id)) {
+        response.status(403).json({ message: "Only the interviewer can update this room." });
+        return;
+      }
+
+      if (request.body.notes !== undefined) {
+        room.notes = String(request.body.notes).trim();
+        await room.save();
+      }
+
+      response.json({
+        room: serializeRoom(room, "interviewer"),
+      });
+    } catch (error) {
+      response.status(500).json({
+        message: "Unable to update interview room.",
+        detail: error.message,
+      });
+    }
+  });
+
   router.get("/:id", authenticateRequest, async (request, response) => {
     try {
       const room = await InterviewRoom.findById(request.params.id)

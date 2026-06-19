@@ -291,6 +291,12 @@ export default function InterviewRoomPage() {
               Invite code: <strong>{roomState.inviteToken}</strong>
             </div>
           ) : null}
+
+          {roomState.role === "interviewer" ? (
+            <Link className="hero-link-button" to={`/rooms/${roomState.id}/analytics`}>
+              Analytics
+            </Link>
+          ) : null}
         </div>
       </section>
 
