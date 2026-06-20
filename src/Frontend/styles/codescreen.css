@@ -886,6 +886,82 @@ textarea::placeholder,
   overflow: hidden;
 }
 
+.cs-room-workspace--resizable {
+  align-items: stretch;
+}
+
+.cs-resize-panel {
+  flex-shrink: 0;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cs-resize-panel--problem {
+  height: 100%;
+}
+
+.cs-resize-panel--problem .interview-problem-panel {
+  width: 100%;
+  height: 100%;
+  border-right: 0;
+}
+
+.cs-resize-panel--output {
+  width: 100%;
+}
+
+.cs-resize-panel--output .code-output-panel {
+  height: 100%;
+}
+
+.cs-editor-output-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.cs-resize-handle {
+  flex-shrink: 0;
+  z-index: 2;
+  touch-action: none;
+  background: transparent;
+  transition: background 150ms ease;
+}
+
+.cs-resize-handle--horizontal {
+  width: 5px;
+  cursor: col-resize;
+  margin: 0 -2px;
+}
+
+.cs-resize-handle--vertical {
+  height: 5px;
+  cursor: row-resize;
+  margin: -2px 0;
+}
+
+.cs-resize-handle:hover,
+.cs-resize-handle:active {
+  background: var(--accent-primary);
+}
+
+body.cs-resize-active {
+  user-select: none;
+}
+
+body.cs-resize-active--horizontal {
+  cursor: col-resize;
+}
+
+body.cs-resize-active--vertical {
+  cursor: row-resize;
+}
+
 .interview-room-layout {
   display: contents;
 }
@@ -949,6 +1025,7 @@ textarea::placeholder,
   flex-direction: column;
   gap: var(--space-3);
   max-height: none;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -977,11 +1054,28 @@ textarea::placeholder,
 }
 
 .interview-problem-body {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   display: grid;
   gap: var(--space-4);
   font-size: 13px;
   line-height: 1.6;
+}
+
+.problem-collapse-icon--open {
+  transform: rotate(180deg);
+}
+
+.problem-chat-section {
+  flex: 1 1 220px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-top: 1px solid var(--border-muted);
+  margin: 0 calc(-1 * var(--space-4));
+  margin-bottom: calc(-1 * var(--space-5));
 }
 
 .interview-problem-section h3 {
@@ -1045,7 +1139,7 @@ textarea::placeholder,
 /* Output panel */
 .code-output-panel {
   flex-shrink: 0;
-  height: 200px;
+  height: 100%;
   border-radius: 0;
   border: 0;
   border-top: 1px solid var(--border-muted);
@@ -1274,6 +1368,26 @@ textarea::placeholder,
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.interview-chat-panel--embedded {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+  border-top: 0;
+}
+
+.interview-chat-panel--embedded .interview-chat-header {
+  height: 32px;
+  padding: 0 var(--space-4);
+}
+
+.interview-chat-panel--embedded .interview-chat-header::before {
+  display: none;
+}
+
+.interview-chat-panel--embedded .chat-header-title {
+  display: flex;
 }
 
 .interview-chat-panel.is-collapsed {

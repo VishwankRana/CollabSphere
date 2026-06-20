@@ -1,5 +1,19 @@
 # Change Log
 
+## 2026-06-19 — Interview room resizable panels, chat relocation, timer fix
+
+- **Timestamp:** 2026-06-19
+- **Files changed:**
+  - `src/Frontend/components/ResizeHandle.jsx` (new)
+  - `src/Frontend/components/ProblemPanel.jsx`
+  - `src/Frontend/components/ChatPanel.jsx`
+  - `src/Frontend/components/CodeOutputPanel.jsx`
+  - `src/Frontend/pages/InterviewRoomPage.jsx`
+  - `src/Frontend/styles/codescreen.css`
+- **Summary of change:** Added draggable resizable panels between problem, editor, and output sections; moved chat into the problem panel; moved test cases into output panel tabs (Output / Test Cases); removed quick references; fixed interview timer to stop when the session ends.
+- **Impacted modules:** Interview room layout and UI
+- **Risk level:** Low
+
 ## 2026-06-19 — Sidebar, density improvements, lucide-react icons
 
 - **Timestamp:** 2026-06-19

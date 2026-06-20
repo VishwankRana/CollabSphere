@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CheckCircle,
   CheckSquare,
@@ -17,11 +17,13 @@ function getRunShortcutLabel() {
 
 export default function CodeOutputPanel({
   isRunning = false,
+  isRunningTests = false,
   result = null,
   testResults = null,
   stdin = "",
   onStdinChange,
   readOnly = false,
+  showTestCasesTab = false,
 }) {
   const [activeTab, setActiveTab] = useState("output");
   const hasTestResults = Array.isArray(testResults) && testResults.length > 0;
@@ -30,7 +32,11 @@ export default function CodeOutputPanel({
     : 0;
   const runShortcut = useMemo(() => getRunShortcutLabel(), []);
 
-  const showTestsTab = hasTestResults || isRunning;
+  useEffect(() => {
+    if (hasTestResults) {
+      setActiveTab("tests");
+    }
+  }, [hasTestResults, testResults]);
 
   return (
     <section className="code-output-panel">
@@ -44,7 +50,7 @@ export default function CodeOutputPanel({
             Output
           </IconLabel>
         </button>
-        {showTestsTab ? (
+        {showTestCasesTab ? (
           <button
             type="button"
             className={`code-output-tab${activeTab === "tests" ? " is-active" : ""}`}
@@ -71,54 +77,69 @@ export default function CodeOutputPanel({
       ) : null}
 
       <div className="code-output-content">
-        {activeTab === "tests" && hasTestResults ? (
-          <ul className="code-test-results">
-            {testResults.map((entry, index) => (
-              <li key={`test-${index}`}>
-                <div
-                  className={`code-test-row ${entry.passed ? "code-test-pass" : "code-test-fail"}`}
-                >
-                  {entry.passed ? (
-                    <CheckCircle size={14} strokeWidth={1.5} />
-                  ) : (
-                    <XCircle size={14} strokeWidth={1.5} />
-                  )}
-                  <span>
-                    Case {index + 1}: {entry.passed ? "Passed" : "Failed"}
-                    {entry.isHidden ? " (hidden)" : ""}
-                  </span>
-                </div>
-                {!entry.passed || (!entry.isHidden && entry.actualOutput !== undefined) ? (
-                  <div className="code-test-details">
-                    {entry.input !== undefined && !entry.isHidden ? (
-                      <p>
-                        <span>Input</span>
-                        <pre>{entry.input || "(empty)"}</pre>
-                      </p>
+        {activeTab === "tests" ? (
+          <>
+            {isRunningTests ? (
+              <p className="code-output-running">
+                Running tests<span className="cs-running-dots" aria-hidden="true" />
+              </p>
+            ) : null}
+
+            {hasTestResults ? (
+              <ul className="code-test-results">
+                {testResults.map((entry, index) => (
+                  <li key={`test-${index}`}>
+                    <div
+                      className={`code-test-row ${entry.passed ? "code-test-pass" : "code-test-fail"}`}
+                    >
+                      {entry.passed ? (
+                        <CheckCircle size={14} strokeWidth={1.5} />
+                      ) : (
+                        <XCircle size={14} strokeWidth={1.5} />
+                      )}
+                      <span>
+                        Case {index + 1}: {entry.passed ? "Passed" : "Failed"}
+                        {entry.isHidden ? " (hidden)" : ""}
+                      </span>
+                    </div>
+                    {!entry.passed || (!entry.isHidden && entry.actualOutput !== undefined) ? (
+                      <div className="code-test-details">
+                        {entry.input !== undefined && !entry.isHidden ? (
+                          <p>
+                            <span>Input</span>
+                            <pre>{entry.input || "(empty)"}</pre>
+                          </p>
+                        ) : null}
+                        {entry.expectedOutput !== undefined && !entry.passed ? (
+                          <p>
+                            <span>Expected</span>
+                            <pre>{entry.expectedOutput || "(empty)"}</pre>
+                          </p>
+                        ) : null}
+                        {entry.actualOutput !== undefined && !entry.passed ? (
+                          <p>
+                            <span>Actual</span>
+                            <pre>{entry.actualOutput || "(empty)"}</pre>
+                          </p>
+                        ) : null}
+                        {entry.stderr ? (
+                          <p>
+                            <span>Stderr</span>
+                            <pre className="code-output-stderr">{entry.stderr}</pre>
+                          </p>
+                        ) : null}
+                      </div>
                     ) : null}
-                    {entry.expectedOutput !== undefined && !entry.passed ? (
-                      <p>
-                        <span>Expected</span>
-                        <pre>{entry.expectedOutput || "(empty)"}</pre>
-                      </p>
-                    ) : null}
-                    {entry.actualOutput !== undefined && !entry.passed ? (
-                      <p>
-                        <span>Actual</span>
-                        <pre>{entry.actualOutput || "(empty)"}</pre>
-                      </p>
-                    ) : null}
-                    {entry.stderr ? (
-                      <p>
-                        <span>Stderr</span>
-                        <pre className="code-output-stderr">{entry.stderr}</pre>
-                      </p>
-                    ) : null}
-                  </div>
-                ) : null}
-              </li>
-            ))}
-          </ul>
+                  </li>
+                ))}
+              </ul>
+            ) : !isRunningTests ? (
+              <div className="code-output-idle-panel">
+                <CheckSquare size={28} strokeWidth={1.5} />
+                <p>Run tests to see results</p>
+              </div>
+            ) : null}
+          </>
         ) : null}
 
         {activeTab === "output" ? (
@@ -162,12 +183,11 @@ export default function CodeOutputPanel({
                 {!readOnly ? (
                   <span className="code-output-shortcut">
                     <Command size={11} strokeWidth={1.5} />
-                    {runShortcut === "Cmd" ? null : (
-                      <span className="font-mono">{runShortcut}</span>
-                    )}
                     {runShortcut === "Cmd" ? (
                       <span className="font-mono">Cmd</span>
-                    ) : null}
+                    ) : (
+                      <span className="font-mono">{runShortcut}</span>
+                    )}
                     <span>+</span>
                     <CornerDownLeft size={11} strokeWidth={1.5} />
                     <span>to run</span>
@@ -176,13 +196,6 @@ export default function CodeOutputPanel({
               </div>
             ) : null}
           </>
-        ) : null}
-
-        {activeTab === "tests" && !hasTestResults ? (
-          <div className="code-output-idle-panel">
-            <CheckSquare size={28} strokeWidth={1.5} />
-            <p>Run tests to see results</p>
-          </div>
         ) : null}
       </div>
     </section>

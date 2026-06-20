@@ -14,13 +14,13 @@ import {
 
 import { useAuth } from "../auth/useAuth.jsx";
 import AppTopBar from "../components/AppTopBar";
-import ChatPanel from "../components/ChatPanel";
 import CodeOutputPanel from "../components/CodeOutputPanel";
 import CollaborativeCodeEditor from "../components/CollaborativeCodeEditor";
 import ConnectionStatusBadge from "../components/ConnectionStatusBadge";
 import IconLabel from "../components/IconLabel";
 import LanguageSelector from "../components/LanguageSelector";
 import ProblemPanel from "../components/ProblemPanel";
+import ResizeHandle, { useResizePanel } from "../components/ResizeHandle";
 import { apiRequest } from "../lib/api";
 import { formatElapsedClock } from "../lib/timeFormat";
 import {
@@ -63,6 +63,22 @@ export default function InterviewRoomPage() {
   useAntiCheat({
     roomId: roomState?.id,
     enabled: Boolean(roomState?.id && isCandidate),
+  });
+
+  const problemResize = useResizePanel({
+    axis: "horizontal",
+    initial: 300,
+    min: 220,
+    max: 520,
+    storageKey: "interview-problem-width",
+  });
+
+  const outputResize = useResizePanel({
+    axis: "vertical",
+    initial: 200,
+    min: 120,
+    max: 480,
+    storageKey: "interview-output-height",
   });
 
   useEffect(() => {
@@ -168,8 +184,9 @@ export default function InterviewRoomPage() {
     };
 
     const handleRoomEnded = () => {
+      const endedAt = new Date().toISOString();
       setRoomState((current) =>
-        current ? { ...current, status: "ended" } : current
+        current ? { ...current, status: "ended", endedAt } : current
       );
       setShowEndDialog(false);
 
@@ -250,10 +267,19 @@ export default function InterviewRoomPage() {
 
   useEffect(() => {
     if (!roomState?.startedAt) {
+      setElapsedMs(0);
       return undefined;
     }
 
     const start = new Date(roomState.startedAt).getTime();
+
+    if (roomState.status === "ended") {
+      const end = roomState.endedAt
+        ? new Date(roomState.endedAt).getTime()
+        : Date.now();
+      setElapsedMs(Math.max(0, end - start));
+      return undefined;
+    }
 
     function tick() {
       setElapsedMs(Date.now() - start);
@@ -262,7 +288,7 @@ export default function InterviewRoomPage() {
     tick();
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
-  }, [roomState?.startedAt]);
+  }, [roomState?.startedAt, roomState?.endedAt, roomState?.status]);
 
   function handleLanguageChange(nextLanguage) {
     if (!roomState || nextLanguage === language) {
@@ -366,6 +392,11 @@ export default function InterviewRoomPage() {
         },
       });
 
+      const endedAt = new Date().toISOString();
+      setRoomState((current) =>
+        current ? { ...current, status: "ended", endedAt } : current
+      );
+
       navigate(`/rooms/${roomState.id}/analytics`);
     } catch (requestError) {
       setEndError(requestError.message);
@@ -444,20 +475,39 @@ export default function InterviewRoomPage() {
 
       <main className="interview-room-shell">
         <div className="cs-room-viewport">
-          <div className="cs-room-workspace">
-            <section className="interview-room-layout">
+          <div className="cs-room-workspace cs-room-workspace--resizable">
+            {!problemCollapsed ? (
+              <>
+                <div
+                  className="cs-resize-panel cs-resize-panel--problem"
+                  style={{ width: `${problemResize.size}px` }}
+                >
+                  <ProblemPanel
+                    candidate={roomState.candidate}
+                    chatReadOnly={readOnly}
+                    collapsed={problemCollapsed}
+                    interviewer={roomState.interviewer}
+                    problem={roomState.problem}
+                    roomId={roomState.id}
+                    onToggleCollapsed={() => setProblemCollapsed((current) => !current)}
+                  />
+                </div>
+                <ResizeHandle axis="horizontal" onPointerDown={problemResize.onPointerDown} />
+              </>
+            ) : (
               <ProblemPanel
                 candidate={roomState.candidate}
+                chatReadOnly={readOnly}
                 collapsed={problemCollapsed}
                 interviewer={roomState.interviewer}
                 problem={roomState.problem}
-                testCases={roomState.testCases}
-                testResults={testResults}
+                roomId={roomState.id}
                 onToggleCollapsed={() => setProblemCollapsed((current) => !current)}
               />
+            )}
 
-              <div className="interview-room-main">
-                <div className="cs-editor-topbar">
+            <div className="interview-room-main">
+              <div className="cs-editor-topbar">
                   <div className="cs-editor-topbar-left">
                     <LanguageSelector
                       disabled={!canChangeLanguage}
@@ -546,6 +596,7 @@ export default function InterviewRoomPage() {
                   </div>
                 </div>
 
+              <div className="cs-editor-output-stack">
                 <div className="interview-editor-panel">
                   <CollaborativeCodeEditor
                     ref={editorRef}
@@ -558,19 +609,26 @@ export default function InterviewRoomPage() {
                   />
                 </div>
 
-                <CodeOutputPanel
-                  isRunning={isRunning}
-                  readOnly={readOnly}
-                  result={runResult}
-                  stdin={stdin}
-                  testResults={testResults}
-                  onStdinChange={setStdin}
-                />
-              </div>
-            </section>
-          </div>
+                <ResizeHandle axis="vertical" onPointerDown={outputResize.onPointerDown} />
 
-          <ChatPanel key={roomState.id} readOnly={readOnly} roomId={roomState.id} />
+                <div
+                  className="cs-resize-panel cs-resize-panel--output"
+                  style={{ height: `${outputResize.size}px` }}
+                >
+                  <CodeOutputPanel
+                    isRunning={isRunning}
+                    isRunningTests={isRunningTests}
+                    readOnly={readOnly}
+                    result={runResult}
+                    showTestCasesTab={hasTestCases}
+                    stdin={stdin}
+                    testResults={testResults}
+                    onStdinChange={setStdin}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
 
