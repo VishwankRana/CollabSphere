@@ -1,5 +1,13 @@
 # Change Log
 
+## 2026-06-21 — Replay UI cleanup
+
+- **Timestamp:** 2026-06-21
+- **Files changed:** `src/Frontend/pages/InterviewReplayPage.jsx`
+- **Summary of change:** Removed output/test cases panel and chat message counter from interview replay view.
+- **Impacted modules:** Interview replay UI
+- **Risk level:** Low
+
 ## 2026-06-21 — Copy invite code in interview room
 
 - **Timestamp:** 2026-06-21

@@ -7,7 +7,6 @@ import { ArrowLeft, Pause, Play } from "lucide-react";
 import { useAuth } from "../auth/useAuth.jsx";
 import AppTopBar from "../components/AppTopBar";
 import IconLabel from "../components/IconLabel";
-import CodeOutputPanel from "../components/CodeOutputPanel";
 import { apiRequest } from "../lib/api";
 import { applyCodescreenMonacoTheme } from "../lib/monacoTheme";
 import { MONACO_LANGUAGE_IDS } from "../lib/interview";
@@ -17,7 +16,6 @@ import {
   getCodeAtTime,
   getLanguageAtTime,
   getReplayBounds,
-  getRunResultAtTime,
 } from "../lib/interviewReplay";
 
 const PLAYBACK_SPEEDS = [1, 2, 5];
@@ -47,11 +45,6 @@ export default function InterviewReplayPage() {
   const replayLanguage = useMemo(
     () => getLanguageAtTime(events, startMs, currentTimeMs, room?.language || "javascript"),
     [events, startMs, currentTimeMs, room?.language]
-  );
-
-  const replayRunResult = useMemo(
-    () => getRunResultAtTime(events, startMs, currentTimeMs),
-    [events, startMs, currentTimeMs]
   );
 
   const replayMessages = useMemo(
@@ -242,7 +235,6 @@ export default function InterviewReplayPage() {
             <aside className="interview-replay-chat">
               <div className="interview-replay-chat-header">
                 <h2>Chat</h2>
-                <span className="comment-count">{replayMessages.length}</span>
               </div>
 
               <div className="interview-replay-chat-messages">
@@ -270,8 +262,6 @@ export default function InterviewReplayPage() {
               </div>
             </aside>
           </section>
-
-          <CodeOutputPanel readOnly result={replayRunResult} />
 
           <section className="interview-replay-controls">
             <button
