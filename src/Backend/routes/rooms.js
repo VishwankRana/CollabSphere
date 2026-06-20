@@ -72,14 +72,20 @@ export function createRoomsRouter(authenticateRequest) {
   router.get("/", authenticateRequest, async (request, response) => {
     try {
       const rooms = await InterviewRoom.find({
-        interviewerId: request.user._id,
+        $or: [
+          { interviewerId: request.user._id },
+          { candidateId: request.user._id },
+        ],
       })
         .populate("interviewerId", "name email")
         .populate("candidateId", "name email")
         .sort({ createdAt: -1 });
 
       response.json({
-        rooms: rooms.map((room) => serializeRoom(room, "interviewer")),
+        rooms: rooms.map((room) => {
+          const role = getRoomRole(room, request.user._id);
+          return serializeRoom(room, role);
+        }),
       });
     } catch (error) {
       response.status(500).json({

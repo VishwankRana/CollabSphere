@@ -1,5 +1,19 @@
 # Change Log
 
+## 2026-06-19 — Dashboard role filter and problem difficulty
+
+- **Timestamp:** 2026-06-19
+- **Files changed:**
+  - `src/Backend/models/InterviewRoom.js`
+  - `src/Backend/routes/rooms.js`
+  - `src/Frontend/pages/InterviewDashboardPage.jsx`
+  - `src/Frontend/pages/CreateInterviewRoomPage.jsx`
+  - `src/Frontend/components/ProblemPanel.jsx`
+  - `src/Frontend/styles/codescreen.css`
+- **Summary of change:** Replaced dashboard New Interview button with Interviewer/Candidate view toggles; API now returns rooms for both roles; create interview form adds Easy/Medium/Hard difficulty selection.
+- **Impacted modules:** Dashboard, room creation, rooms API
+- **Risk level:** Low
+
 ## 2026-06-19 — Analytics back link, sidebar cleanup
 
 - **Timestamp:** 2026-06-19

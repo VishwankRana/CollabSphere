@@ -8,10 +8,11 @@ import {
   Code,
   Copy,
   ExternalLink,
-  Plus,
   Radio,
   Shield,
   TrendingUp,
+  User,
+  UserCheck,
   Video,
 } from "lucide-react";
 
@@ -139,6 +140,7 @@ export default function InterviewDashboardPage() {
   const navigate = useNavigate();
   const { token } = useAuth();
   const [rooms, setRooms] = useState([]);
+  const [roleView, setRoleView] = useState("interviewer");
   const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -200,9 +202,10 @@ export default function InterviewDashboardPage() {
     }
   }
 
-  const activeCount = rooms.filter((room) => room.status === "active").length;
-  const endedCount = rooms.filter((room) => room.status === "ended").length;
-  const averageScore = computeAverageScore(rooms);
+  const filteredRooms = rooms.filter((room) => room.role === roleView);
+  const activeCount = filteredRooms.filter((room) => room.status === "active").length;
+  const endedCount = filteredRooms.filter((room) => room.status === "ended").length;
+  const averageScore = computeAverageScore(filteredRooms);
   const avgScoreClass =
     averageScore == null
       ? ""
@@ -218,23 +221,44 @@ export default function InterviewDashboardPage() {
         <div>
           <h1 className="font-display">Interviews</h1>
           <p className="cs-page-subtitle">
-            {loading ? "Loading..." : `${rooms.length} total`}
+            {loading
+              ? "Loading..."
+              : `${filteredRooms.length} as ${roleView === "interviewer" ? "interviewer" : "candidate"}`}
           </p>
         </div>
 
-        <Link className="btn-primary" to="/rooms/new">
-          <IconLabel icon={Plus} size={16}>
-            New Interview
-          </IconLabel>
-        </Link>
+        <div className="cs-role-toggle" role="tablist" aria-label="Interview role view">
+          <button
+            type="button"
+            className={`cs-role-toggle-btn${roleView === "interviewer" ? " is-active" : ""}`}
+            role="tab"
+            aria-selected={roleView === "interviewer"}
+            onClick={() => setRoleView("interviewer")}
+          >
+            <IconLabel icon={UserCheck} size={14}>
+              Interviewer
+            </IconLabel>
+          </button>
+          <button
+            type="button"
+            className={`cs-role-toggle-btn${roleView === "candidate" ? " is-active" : ""}`}
+            role="tab"
+            aria-selected={roleView === "candidate"}
+            onClick={() => setRoleView("candidate")}
+          >
+            <IconLabel icon={User} size={14}>
+              Candidate
+            </IconLabel>
+          </button>
+        </div>
       </div>
 
       <section className="dashboard-stats-row page-section">
         <DashboardStatCard
           icon={Video}
           label="Total Interviews"
-          sub="All time"
-          value={loading ? "—" : rooms.length}
+          sub={roleView === "interviewer" ? "Hosted" : "Joined"}
+          value={loading ? "—" : filteredRooms.length}
         />
         <DashboardStatCard
           icon={Radio}
@@ -253,44 +277,47 @@ export default function InterviewDashboardPage() {
         <DashboardStatCard
           icon={TrendingUp}
           label="Avg Score"
-          sub="Candidate performance"
+          sub={roleView === "interviewer" ? "Candidate performance" : "Your performance"}
           value={averageScore == null ? "—" : averageScore}
           valueClassName={avgScoreClass}
         />
       </section>
 
-      <section className="cs-join-strip page-section">
-        <h2 className="section-header">Join with invite code</h2>
-        <p className="hero-copy">Enter the code shared by your interviewer.</p>
-        <form className="interview-join-form" onSubmit={handleJoinSubmit}>
-          <input
-            className="comment-input"
-            value={inviteCode}
-            onChange={(event) => setInviteCode(event.target.value)}
-            placeholder="Invite code"
-          />
-          <button className="btn-primary" disabled={!inviteCode.trim()} type="submit">
-            Join
-          </button>
-        </form>
-      </section>
+      {roleView === "candidate" ? (
+        <section className="cs-join-strip page-section">
+          <h2 className="section-header">Join with invite code</h2>
+          <p className="hero-copy">Enter the code shared by your interviewer.</p>
+          <form className="interview-join-form" onSubmit={handleJoinSubmit}>
+            <input
+              className="comment-input"
+              value={inviteCode}
+              onChange={(event) => setInviteCode(event.target.value)}
+              placeholder="Invite code"
+            />
+            <button className="btn-primary" disabled={!inviteCode.trim()} type="submit">
+              Join
+            </button>
+          </form>
+        </section>
+      ) : null}
 
       {error ? <p className="access-message">{error}</p> : null}
       {copyMessage ? <p className="hero-copy">{copyMessage}</p> : null}
 
       <div className="cs-table-wrap page-section" id="interview-list">
-        {!loading && !error && rooms.length === 0 ? (
+        {!loading && !error && filteredRooms.length === 0 ? (
           <div className="cs-empty-state-panel">
             <Video size={48} strokeWidth={1.5} />
-            <h2>No interviews yet</h2>
+            <h2>
+              {roleView === "interviewer"
+                ? "No interviews hosted yet"
+                : "No interviews joined yet"}
+            </h2>
             <p>
-              Create a room, send an invite link, and run your first live coding interview.
+              {roleView === "interviewer"
+                ? "Create a room from the sidebar, send an invite link, and run your first live coding interview."
+                : "Use an invite code from your interviewer to join a session as a candidate."}
             </p>
-            <Link className="btn-primary" to="/rooms/new">
-              <IconLabel icon={Plus} size={16}>
-                New Interview
-              </IconLabel>
-            </Link>
             <div className="cs-empty-features">
               <span className="cs-empty-feature">
                 <Code size={16} strokeWidth={1.5} />
@@ -311,7 +338,7 @@ export default function InterviewDashboardPage() {
             <thead>
               <tr>
                 <th>Title</th>
-                <th>Candidate</th>
+                <th>{roleView === "interviewer" ? "Candidate" : "Interviewer"}</th>
                 <th>Status</th>
                 <th>Duration</th>
                 <th>Score</th>
@@ -327,7 +354,7 @@ export default function InterviewDashboardPage() {
                       </td>
                     </tr>
                   ))
-                : rooms.map((room) => {
+                : filteredRooms.map((room) => {
                     const durationMs =
                       room.status === "ended" && room.startedAt && room.endedAt
                         ? new Date(room.endedAt) - new Date(room.startedAt)
@@ -344,15 +371,26 @@ export default function InterviewDashboardPage() {
                           </div>
                         </td>
                         <td>
-                          {room.candidate?.name ? (
+                          {roleView === "interviewer" ? (
+                            room.candidate?.name ? (
+                              <span className="cs-candidate-cell">
+                                <span className="cs-candidate-avatar">
+                                  {getInitials(room.candidate.name)}
+                                </span>
+                                {room.candidate.name}
+                              </span>
+                            ) : (
+                              <span className="cs-table-meta">Awaiting candidate</span>
+                            )
+                          ) : room.interviewer?.name ? (
                             <span className="cs-candidate-cell">
                               <span className="cs-candidate-avatar">
-                                {getInitials(room.candidate.name)}
+                                {getInitials(room.interviewer.name)}
                               </span>
-                              {room.candidate.name}
+                              {room.interviewer.name}
                             </span>
                           ) : (
-                            <span className="cs-table-meta">Awaiting candidate</span>
+                            <span className="cs-table-meta">Unknown</span>
                           )}
                         </td>
                         <td>
@@ -386,14 +424,16 @@ export default function InterviewDashboardPage() {
                                 Open
                               </IconLabel>
                             </Link>
-                            {room.status === "ended" ? (
+                            {room.status === "ended" && roleView === "interviewer" ? (
                               <Link className="btn-ghost" to={`/rooms/${room.id}/analytics`}>
                                 <IconLabel icon={BarChart2} size={14}>
                                   Analytics
                                 </IconLabel>
                               </Link>
                             ) : null}
-                            {room.inviteToken && room.status !== "ended" ? (
+                            {room.inviteToken &&
+                            room.status !== "ended" &&
+                            roleView === "interviewer" ? (
                               <button
                                 type="button"
                                 className="btn-icon btn-ghost"

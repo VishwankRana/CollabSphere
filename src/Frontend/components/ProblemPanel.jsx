@@ -38,7 +38,10 @@ export default function ProblemPanel({
   roomId,
 }) {
   const examples = problem.examples || [];
-  const difficulty = problem.difficulty || "Medium";
+  const difficulty = problem.difficulty
+    ? String(problem.difficulty).charAt(0).toUpperCase() +
+      String(problem.difficulty).slice(1).toLowerCase()
+    : "Medium";
 
   const constraints = problem.constraints
     ? problem.constraints

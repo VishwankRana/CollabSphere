@@ -40,6 +40,11 @@ const problemSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    difficulty: {
+      type: String,
+      enum: ["easy", "medium", "hard", "Easy", "Medium", "Hard"],
+      default: "medium",
+    },
   },
   {
     _id: false,

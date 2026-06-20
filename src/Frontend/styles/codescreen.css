@@ -594,6 +594,90 @@ textarea::placeholder,
   color: var(--text-secondary);
 }
 
+.cs-role-toggle {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 3px;
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+}
+
+.cs-role-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.cs-role-toggle-btn:hover {
+  color: var(--text-primary);
+}
+
+.cs-role-toggle-btn.is-active {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.cs-difficulty-toggle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.cs-difficulty-toggle-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-full);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.cs-difficulty-toggle-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+
+.cs-difficulty-toggle-btn.is-active {
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+  background: var(--accent-subtle);
+}
+
+.cs-difficulty-toggle-btn--easy.is-active {
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 40%, transparent);
+  background: var(--success-subtle);
+}
+
+.cs-difficulty-toggle-btn--medium.is-active {
+  color: var(--warning);
+  border-color: color-mix(in srgb, var(--warning) 40%, transparent);
+  background: var(--warning-subtle);
+}
+
+.cs-difficulty-toggle-btn--hard.is-active {
+  color: var(--error);
+  border-color: color-mix(in srgb, var(--error) 40%, transparent);
+  background: color-mix(in srgb, var(--error) 12%, transparent);
+}
+
 .cs-table-wrap {
   border: 1px solid var(--border-muted);
   border-radius: var(--radius-lg);

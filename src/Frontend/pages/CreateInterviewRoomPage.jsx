@@ -13,6 +13,12 @@ const EMPTY_TEST_CASE = {
   isHidden: false,
 };
 
+const DIFFICULTY_OPTIONS = [
+  { value: "easy", label: "Easy" },
+  { value: "medium", label: "Medium" },
+  { value: "hard", label: "Hard" },
+];
+
 export default function CreateInterviewRoomPage() {
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -20,6 +26,7 @@ export default function CreateInterviewRoomPage() {
   const [problemTitle, setProblemTitle] = useState("");
   const [problemDescription, setProblemDescription] = useState("");
   const [constraints, setConstraints] = useState("");
+  const [difficulty, setDifficulty] = useState("medium");
   const [language, setLanguage] = useState("javascript");
   const [testCases, setTestCases] = useState([{ ...EMPTY_TEST_CASE }]);
   const [showTestCases, setShowTestCases] = useState(false);
@@ -73,6 +80,7 @@ export default function CreateInterviewRoomPage() {
             title: problemTitle.trim(),
             description: problemDescription.trim(),
             constraints: constraints.trim(),
+            difficulty,
           },
           testCases: cleanedTestCases,
         },
@@ -114,6 +122,26 @@ export default function CreateInterviewRoomPage() {
                 placeholder="e.g. Two Sum"
               />
             </label>
+
+            <div className="interview-form-field">
+              <span>Difficulty</span>
+              <div className="cs-difficulty-toggle" role="radiogroup" aria-label="Problem difficulty">
+                {DIFFICULTY_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={`cs-difficulty-toggle-btn cs-difficulty-toggle-btn--${option.value}${
+                      difficulty === option.value ? " is-active" : ""
+                    }`}
+                    role="radio"
+                    aria-checked={difficulty === option.value}
+                    onClick={() => setDifficulty(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <label className="interview-form-field">
               <span>Problem description</span>
