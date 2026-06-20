@@ -1,5 +1,19 @@
 # Change Log
 
+## 2026-06-19 — Output panel test cases, resize UX, chat layout polish
+
+- **Timestamp:** 2026-06-19
+- **Files changed:**
+  - `src/Frontend/components/CodeOutputPanel.jsx`
+  - `src/Frontend/components/ChatPanel.jsx`
+  - `src/Frontend/components/ProblemPanel.jsx`
+  - `src/Frontend/components/ResizeHandle.jsx`
+  - `src/Frontend/pages/InterviewRoomPage.jsx`
+  - `src/Frontend/styles/codescreen.css`
+- **Summary of change:** Always show Test Cases tab with room test case definitions; improved vertical resize handle hit area and layout; centered chat empty/closed messages; moved collapse control to In this room header; reduced difficulty badge size.
+- **Impacted modules:** Interview room UI
+- **Risk level:** Low
+
 ## 2026-06-19 — Interview room resizable panels, chat relocation, timer fix
 
 - **Timestamp:** 2026-06-19

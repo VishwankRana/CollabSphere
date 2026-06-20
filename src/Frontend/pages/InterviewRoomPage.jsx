@@ -620,8 +620,8 @@ export default function InterviewRoomPage() {
                     isRunningTests={isRunningTests}
                     readOnly={readOnly}
                     result={runResult}
-                    showTestCasesTab={hasTestCases}
                     stdin={stdin}
+                    testCases={roomState.testCases || []}
                     testResults={testResults}
                     onStdinChange={setStdin}
                   />

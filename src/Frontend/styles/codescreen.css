@@ -911,10 +911,12 @@ textarea::placeholder,
 
 .cs-resize-panel--output {
   width: 100%;
+  flex: 0 0 auto;
 }
 
 .cs-resize-panel--output .code-output-panel {
   height: 100%;
+  min-height: 0;
 }
 
 .cs-editor-output-stack {
@@ -923,31 +925,7 @@ textarea::placeholder,
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-}
-
-.cs-resize-handle {
-  flex-shrink: 0;
-  z-index: 2;
-  touch-action: none;
-  background: transparent;
-  transition: background 150ms ease;
-}
-
-.cs-resize-handle--horizontal {
-  width: 5px;
-  cursor: col-resize;
-  margin: 0 -2px;
-}
-
-.cs-resize-handle--vertical {
-  height: 5px;
-  cursor: row-resize;
-  margin: -2px 0;
-}
-
-.cs-resize-handle:hover,
-.cs-resize-handle:active {
-  background: var(--accent-primary);
+  position: relative;
 }
 
 body.cs-resize-active {
@@ -972,6 +950,7 @@ body.cs-resize-active--vertical {
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
 }
 
 .cs-editor-topbar {
@@ -1001,6 +980,54 @@ body.cs-resize-active--vertical {
   background: var(--code-bg);
   overflow: hidden;
   box-shadow: none;
+}
+
+.cs-editor-output-stack .interview-editor-panel {
+  flex: 1 1 0;
+  min-height: 120px;
+}
+
+.cs-resize-handle {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 20;
+  touch-action: none;
+  background: var(--border-muted);
+  transition: background 150ms ease;
+}
+
+.cs-resize-handle::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+}
+
+.cs-resize-handle--horizontal {
+  width: 6px;
+  cursor: col-resize;
+  margin: 0 -3px;
+}
+
+.cs-resize-handle--horizontal::before {
+  inset: 0 -6px;
+}
+
+.cs-resize-handle--vertical {
+  height: 6px;
+  cursor: row-resize;
+  margin: -3px 0;
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.cs-resize-handle--vertical::before {
+  inset: -6px 0;
+}
+
+.cs-resize-handle:hover,
+.cs-resize-handle:active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
 }
 
 .collaborative-code-editor {
@@ -1184,12 +1211,24 @@ body.cs-resize-active--vertical {
 
 .code-output-content {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--space-3) var(--space-4);
   background: var(--code-bg);
   font-family: "JetBrains Mono", monospace;
   font-size: 12.5px;
   line-height: 1.6;
+}
+
+.code-output-testcases {
+  font-family: "Inter", sans-serif;
+}
+
+.code-output-testcase-title {
+  margin-bottom: var(--space-2);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .code-output-header {
@@ -1428,10 +1467,18 @@ body.cs-resize-active--vertical {
 .interview-chat-messages {
   flex: 1;
   max-height: none;
+  min-height: 0;
   overflow-y: auto;
   display: grid;
   gap: 0;
   align-content: start;
+}
+
+.interview-chat-messages--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .interview-chat-message {
@@ -2401,12 +2448,25 @@ body.cs-resize-active--vertical {
   border-bottom: 1px solid var(--border-muted);
 }
 
+.problem-participant-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: 8px;
+}
+
 .problem-participant-label {
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-tertiary);
-  margin-bottom: 8px;
+  margin-bottom: 0;
+}
+
+.problem-collapse-btn {
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .problem-participant-row {
@@ -2440,7 +2500,13 @@ body.cs-resize-active--vertical {
 
 .problem-difficulty-badge {
   display: inline-flex;
-  margin-bottom: var(--space-3);
+  width: fit-content;
+  margin-bottom: var(--space-2);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 1px 6px;
+  line-height: 1.4;
 }
 
 .problem-difficulty-badge--easy {
@@ -2558,8 +2624,11 @@ body.cs-resize-active--vertical {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 100%;
   height: 100%;
-  gap: 4px;
+  min-height: 120px;
+  gap: 6px;
+  padding: var(--space-4);
   text-align: center;
   color: var(--text-tertiary);
 }
@@ -2567,10 +2636,25 @@ body.cs-resize-active--vertical {
 .chat-empty-state p {
   margin: 0;
   font-size: 12px;
+  color: var(--text-secondary);
 }
 
 .chat-empty-state span {
   font-size: 11px;
+}
+
+.interview-chat-readonly {
+  margin: var(--space-2) 0 0;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.interview-chat-readonly--footer {
+  flex-shrink: 0;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-muted);
+  text-align: center;
 }
 
 .interview-chat-header {

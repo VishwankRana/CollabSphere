@@ -91,12 +91,19 @@ export default function ChatPanel({ roomId, readOnly = false, embedded = false }
         {!embedded ? <span className="comment-count">{messages.length}</span> : null}
       </div>
 
-      <div className="interview-chat-messages">
+      <div
+        className={`interview-chat-messages${
+          messages.length === 0 ? " interview-chat-messages--empty" : ""
+        }`}
+      >
         {messages.length === 0 ? (
           <div className="chat-empty-state">
             <MessageSquare size={28} strokeWidth={1.5} />
             <p>No messages yet</p>
             <span>Use chat to discuss the problem</span>
+            {readOnly ? (
+              <p className="interview-chat-readonly">Chat is closed because this interview has ended.</p>
+            ) : null}
           </div>
         ) : (
           messages.map((message) => (
@@ -141,9 +148,11 @@ export default function ChatPanel({ roomId, readOnly = false, embedded = false }
             <ArrowRight size={18} strokeWidth={1.5} />
           </button>
         </div>
-      ) : (
-        <p className="hero-copy interview-chat-readonly">Chat is closed because this interview has ended.</p>
-      )}
+      ) : messages.length > 0 ? (
+        <p className="hero-copy interview-chat-readonly interview-chat-readonly--footer">
+          Chat is closed because this interview has ended.
+        </p>
+      ) : null}
     </section>
   );
 }

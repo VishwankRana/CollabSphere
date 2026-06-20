@@ -19,13 +19,14 @@ export default function CodeOutputPanel({
   isRunning = false,
   isRunningTests = false,
   result = null,
+  testCases = [],
   testResults = null,
   stdin = "",
   onStdinChange,
   readOnly = false,
-  showTestCasesTab = false,
 }) {
   const [activeTab, setActiveTab] = useState("output");
+  const hasTestCases = Array.isArray(testCases) && testCases.length > 0;
   const hasTestResults = Array.isArray(testResults) && testResults.length > 0;
   const passedCount = hasTestResults
     ? testResults.filter((entry) => entry.passed).length
@@ -50,18 +51,16 @@ export default function CodeOutputPanel({
             Output
           </IconLabel>
         </button>
-        {showTestCasesTab ? (
-          <button
-            type="button"
-            className={`code-output-tab${activeTab === "tests" ? " is-active" : ""}`}
-            onClick={() => setActiveTab("tests")}
-          >
-            <IconLabel icon={CheckSquare} size={14}>
-              Test Cases
-              {hasTestResults ? ` (${passedCount}/${testResults.length})` : ""}
-            </IconLabel>
-          </button>
-        ) : null}
+        <button
+          type="button"
+          className={`code-output-tab${activeTab === "tests" ? " is-active" : ""}`}
+          onClick={() => setActiveTab("tests")}
+        >
+          <IconLabel icon={CheckSquare} size={14}>
+            Test Cases
+            {hasTestResults ? ` (${passedCount}/${testResults.length})` : hasTestCases ? ` (${testCases.length})` : ""}
+          </IconLabel>
+        </button>
       </div>
 
       {!readOnly && activeTab === "output" ? (
@@ -133,7 +132,26 @@ export default function CodeOutputPanel({
                   </li>
                 ))}
               </ul>
-            ) : !isRunningTests ? (
+            ) : null}
+
+            {!hasTestResults && hasTestCases ? (
+              <ul className="interview-problem-testcases code-output-testcases">
+                {testCases.map((testCase, index) => (
+                  <li key={`test-case-${index}`}>
+                    <div className="code-output-testcase-title">
+                      Case {index + 1}
+                      {testCase.isHidden ? " (hidden)" : ""}
+                    </div>
+                    <span>Input</span>
+                    <pre>{testCase.input || "(empty)"}</pre>
+                    <span>Expected Output</span>
+                    <pre>{testCase.expectedOutput || "(empty)"}</pre>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            {!hasTestResults && !hasTestCases && !isRunningTests ? (
               <div className="code-output-idle-panel">
                 <CheckSquare size={28} strokeWidth={1.5} />
                 <p>Run tests to see results</p>

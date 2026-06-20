@@ -47,11 +47,29 @@ export default function ProblemPanel({
         .filter(Boolean)
     : [];
 
+  const collapseButton = (
+    <button
+      type="button"
+      className="btn-ghost btn-icon problem-collapse-btn"
+      aria-label={collapsed ? "Expand problem panel" : "Collapse problem panel"}
+      onClick={onToggleCollapsed}
+    >
+      <ChevronRight
+        size={18}
+        strokeWidth={1.5}
+        className={collapsed ? "" : "problem-collapse-icon--open"}
+      />
+    </button>
+  );
+
   return (
     <aside className={`interview-problem-panel${collapsed ? " is-collapsed" : ""}`}>
       {!collapsed ? (
         <div className="problem-participant-strip">
-          <div className="problem-participant-label">In this room</div>
+          <div className="problem-participant-header">
+            <div className="problem-participant-label">In this room</div>
+            {collapseButton}
+          </div>
 
           <div className="problem-participant-row">
             <span className="interview-chat-avatar interview-chat-avatar--interviewer">
@@ -83,18 +101,7 @@ export default function ProblemPanel({
         <div>
           <h2>{problem.title || "Coding challenge"}</h2>
         </div>
-        <button
-          type="button"
-          className="btn-ghost btn-icon"
-          aria-label={collapsed ? "Expand problem panel" : "Collapse problem panel"}
-          onClick={onToggleCollapsed}
-        >
-          <ChevronRight
-            size={18}
-            strokeWidth={1.5}
-            className={collapsed ? "" : "problem-collapse-icon--open"}
-          />
-        </button>
+        {collapsed ? collapseButton : null}
       </div>
 
       {!collapsed ? (

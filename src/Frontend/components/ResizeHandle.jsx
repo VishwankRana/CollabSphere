@@ -34,6 +34,7 @@ export function useResizePanel({
   const onPointerDown = useCallback(
     (event) => {
       event.preventDefault();
+      event.currentTarget.setPointerCapture(event.pointerId);
       draggingRef.current = true;
       startRef.current = {
         pointer: axis === "horizontal" ? event.clientX : event.clientY,
