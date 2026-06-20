@@ -1,5 +1,13 @@
 # Change Log
 
+## 2026-06-21 — Copy invite code in interview room
+
+- **Timestamp:** 2026-06-21
+- **Files changed:** `src/Frontend/pages/InterviewRoomPage.jsx`
+- **Summary of change:** Added Copy Invite Code button for interviewers in the active interview room editor top bar.
+- **Impacted modules:** Interview room UI
+- **Risk level:** Low
+
 ## 2026-06-21 — Question Bank full feature
 
 - **Timestamp:** 2026-06-21

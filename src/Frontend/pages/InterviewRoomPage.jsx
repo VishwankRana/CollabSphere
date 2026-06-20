@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   BarChart2,
   Clock,
+  Copy,
   LogOut,
   Play,
   RefreshCw,
@@ -54,6 +55,7 @@ export default function InterviewRoomPage() {
   const [endError, setEndError] = useState("");
   const [socketError, setSocketError] = useState("");
   const [collabStatus, setCollabStatus] = useState("connecting");
+  const [copyInviteMessage, setCopyInviteMessage] = useState("");
   const [runCount, setRunCount] = useState(0);
   const [elapsedMs, setElapsedMs] = useState(0);
 
@@ -365,6 +367,21 @@ export default function InterviewRoomPage() {
     editorRef.current?.resetToStarter?.();
   }
 
+  async function handleCopyInvite() {
+    if (!roomState?.inviteToken) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(roomState.inviteToken);
+      setCopyInviteMessage("Invite code copied.");
+      window.setTimeout(() => setCopyInviteMessage(""), 2500);
+    } catch {
+      setCopyInviteMessage("Unable to copy invite code.");
+      window.setTimeout(() => setCopyInviteMessage(""), 2500);
+    }
+  }
+
   function handleLeaveRoom() {
     getInterviewSocket(token).emit("room:leave", { roomId: roomState?.id });
     navigate("/");
@@ -467,9 +484,11 @@ export default function InterviewRoomPage() {
         </div>
       ) : null}
 
-      {runError || socketError || languageMessage ? (
+      {runError || socketError || languageMessage || copyInviteMessage ? (
         <div className="cs-room-errors">
-          {[runError, socketError, languageMessage].filter(Boolean).join(" · ")}
+          {[runError, socketError, languageMessage, copyInviteMessage]
+            .filter(Boolean)
+            .join(" · ")}
         </div>
       ) : null}
 
@@ -564,6 +583,18 @@ export default function InterviewRoomPage() {
                           </button>
                         ) : null}
                       </>
+                    ) : null}
+
+                    {roomState.role === "interviewer" && !readOnly && roomState.inviteToken ? (
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={handleCopyInvite}
+                      >
+                        <IconLabel icon={Copy} size={16}>
+                          Copy Invite Code
+                        </IconLabel>
+                      </button>
                     ) : null}
 
                     {roomState.role === "interviewer" && !readOnly ? (
