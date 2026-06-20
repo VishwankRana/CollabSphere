@@ -11,8 +11,16 @@ function formatTimestamp(value) {
   return formatDistanceToNow(new Date(value), { addSuffix: true });
 }
 
-function formatRoleLabel(role) {
-  return role === "interviewer" ? "Interviewer" : "Candidate";
+function getInitials(name) {
+  if (!name) {
+    return "?";
+  }
+
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("");
 }
 
 export default function ChatPanel({ roomId, readOnly = false }) {
@@ -74,19 +82,17 @@ export default function ChatPanel({ roomId, readOnly = false }) {
   return (
     <section className={`interview-chat-panel${collapsed ? " is-collapsed" : ""}`}>
       <div className="interview-chat-header">
-        <div>
-          <p className="panel-kicker">Room chat</p>
-          <h2>Messages</h2>
-        </div>
-
         <div className="interview-chat-header-actions">
-          <span className="comment-count">{messages.length}</span>
+          {!collapsed ? (
+            <span className="comment-count">{messages.length}</span>
+          ) : null}
           <button
             type="button"
-            className="hero-link-button"
+            className="btn-ghost btn-icon"
+            aria-label={collapsed ? "Expand chat" : "Collapse chat"}
             onClick={() => setCollapsed((current) => !current)}
           >
-            {collapsed ? "Expand chat" : "Collapse chat"}
+            {collapsed ? "v" : "^"}
           </button>
         </div>
       </div>
@@ -100,13 +106,13 @@ export default function ChatPanel({ roomId, readOnly = false }) {
               messages.map((message) => (
                 <article className="interview-chat-message" key={message.id}>
                   <div className="interview-chat-message-header">
+                    <span
+                      className={`interview-chat-avatar interview-chat-avatar--${message.role}`}
+                    >
+                      {getInitials(message.senderName)}
+                    </span>
                     <div className="interview-chat-message-meta">
-                      <strong>{message.senderName}</strong>
-                      <span
-                        className={`interview-chat-role interview-chat-role--${message.role}`}
-                      >
-                        {formatRoleLabel(message.role)}
-                      </span>
+                      <strong className={`role-${message.role}`}>{message.senderName}</strong>
                     </div>
                     <time dateTime={new Date(message.timestamp).toISOString()}>
                       {formatTimestamp(message.timestamp)}
@@ -126,16 +132,17 @@ export default function ChatPanel({ roomId, readOnly = false }) {
                 value={text}
                 onChange={(event) => setText(event.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Type a message. Enter to send, Shift+Enter for a new line."
-                rows={2}
+                placeholder="Type a message..."
+                rows={1}
               />
               <button
                 type="button"
                 className="comment-submit"
                 disabled={!text.trim()}
+                aria-label="Send message"
                 onClick={sendMessage}
               >
-                Send
+                &rarr;
               </button>
             </div>
           ) : (

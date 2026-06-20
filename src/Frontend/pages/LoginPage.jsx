@@ -32,11 +32,12 @@ export default function LoginPage() {
   return (
     <main className="auth-shell">
       <section className="auth-card">
-        <p className="eyebrow">CollabSphere</p>
+        <Link className="cs-logo" to="/">
+          <span className="cs-logo-dot" aria-hidden="true" />
+          <span className="font-display">CodeScreen</span>
+        </Link>
         <h1>Welcome back</h1>
-        <p className="hero-copy">
-          Log in to access your collaborative documents and role-based sharing.
-        </p>
+        <p className="hero-copy">Log in to run and manage coding interviews.</p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <input
@@ -60,12 +61,8 @@ export default function LoginPage() {
               }))
             }
           />
-          <button
-            className="comment-submit"
-            disabled={submitting}
-            type="submit"
-          >
-            {submitting ? "Logging in..." : "Login"}
+          <button className="btn-primary" disabled={submitting} type="submit">
+            {submitting ? "Logging in..." : "Log in"}
           </button>
           {error ? <p className="access-message">{error}</p> : null}
         </form>

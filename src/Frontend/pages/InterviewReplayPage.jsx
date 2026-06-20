@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Editor from "@monaco-editor/react";
 import { formatDistanceToNow } from "date-fns";
-import { Link, useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 
 import { useAuth } from "../auth/useAuth.jsx";
+import AppTopBar from "../components/AppTopBar";
 import CodeOutputPanel from "../components/CodeOutputPanel";
 import { apiRequest } from "../lib/api";
+import { applyCodescreenMonacoTheme } from "../lib/monacoTheme";
 import { MONACO_LANGUAGE_IDS } from "../lib/interview";
 import {
   formatReplayOffset,
@@ -17,10 +19,6 @@ import {
 } from "../lib/interviewReplay";
 
 const PLAYBACK_SPEEDS = [1, 2, 5];
-
-function formatRoleLabel(role) {
-  return role === "interviewer" ? "Interviewer" : "Candidate";
-}
 
 export default function InterviewReplayPage() {
   const { id } = useParams();
@@ -159,6 +157,7 @@ export default function InterviewReplayPage() {
   function handleEditorMount(editor, monaco) {
     editorRef.current = editor;
     monacoRef.current = monaco;
+    applyCodescreenMonacoTheme(monaco);
 
     editor.getModel()?.setValue(replayCode || "");
     monaco.editor.setModelLanguage(
@@ -173,56 +172,49 @@ export default function InterviewReplayPage() {
   }
 
   if (loading) {
-    return <main className="auth-shell">Loading interview replay...</main>;
+    return (
+      <div className="cs-app">
+        <AppTopBar />
+        <main className="auth-shell">Loading interview replay...</main>
+      </div>
+    );
   }
 
   if (error || !room) {
     return (
-      <main className="auth-shell">
-        <section className="auth-card">
-          <h1>Replay unavailable</h1>
-          <p className="hero-copy">{error || "Unable to load this interview replay."}</p>
-          <Link className="comment-submit" to={id ? `/rooms/${id}/analytics` : "/"}>
-            Back to analytics
-          </Link>
-        </section>
-      </main>
+      <div className="cs-app">
+        <AppTopBar />
+        <main className="auth-shell">
+          <section className="auth-card">
+            <h1>Replay unavailable</h1>
+            <p className="hero-copy">{error || "Unable to load this interview replay."}</p>
+            <Link className="btn-primary" to={id ? `/rooms/${id}/analytics` : "/"}>
+              Back to analytics
+            </Link>
+          </section>
+        </main>
+      </div>
     );
   }
 
   return (
-    <main className="interview-replay-shell">
-      <section className="interview-replay-header">
-        <div>
-          <p className="panel-kicker">Interview replay</p>
-          <h1>{room.title}</h1>
-          <p className="hero-copy">
-            Scrub through code snapshots, chat, and run results from the recorded session.
-          </p>
-        </div>
-
-        <div className="interview-room-actions">
-          <Link className="hero-link-button" to={`/rooms/${room.id}/analytics`}>
-            Analytics
-          </Link>
-          <Link className="hero-link-button" to={`/rooms/${room.id}`}>
-            Back to room
-          </Link>
-        </div>
-      </section>
+    <div className="cs-app interview-replay-shell">
+      <AppTopBar roomTitle={room.title} variant="replay" />
 
       {sampled ? (
-        <p className="access-message">
+        <p className="cs-room-errors">
           This replay uses sampled events because the full recording exceeded 500 events.
         </p>
       ) : null}
 
       {!events.length ? (
-        <section className="analytics-panel">
-          <p className="hero-copy">No recording events were captured for this interview yet.</p>
-        </section>
+        <main className="auth-shell">
+          <section className="analytics-panel">
+            <p className="hero-copy">No recording events were captured for this interview yet.</p>
+          </section>
+        </main>
       ) : (
-        <>
+        <div className="cs-replay-viewport">
           <section className="interview-replay-main">
             <div className="interview-replay-editor">
               <Editor
@@ -239,13 +231,13 @@ export default function InterviewReplayPage() {
                   tabSize: 2,
                   automaticLayout: true,
                 }}
-                theme="vs-light"
+                theme="codescreen-dark"
               />
             </div>
 
             <aside className="interview-replay-chat">
               <div className="interview-replay-chat-header">
-                <h2>Chat replay</h2>
+                <h2>Chat</h2>
                 <span className="comment-count">{replayMessages.length}</span>
               </div>
 
@@ -257,12 +249,9 @@ export default function InterviewReplayPage() {
                     <article className="interview-chat-message" key={message.id}>
                       <div className="interview-chat-message-header">
                         <div className="interview-chat-message-meta">
-                          <strong>{message.payload?.senderName || "Participant"}</strong>
-                          <span
-                            className={`interview-chat-role interview-chat-role--${message.userRole}`}
-                          >
-                            {formatRoleLabel(message.userRole)}
-                          </span>
+                          <strong className={`role-${message.userRole}`}>
+                            {message.payload?.senderName || "Participant"}
+                          </strong>
                         </div>
                         <time dateTime={new Date(message.timestamp).toISOString()}>
                           {formatDistanceToNow(new Date(message.timestamp), {
@@ -281,6 +270,16 @@ export default function InterviewReplayPage() {
           <CodeOutputPanel readOnly result={replayRunResult} />
 
           <section className="interview-replay-controls">
+            <button
+              type="button"
+              className="btn-icon btn-ghost"
+              disabled={durationMs <= 0}
+              aria-label={isPlaying ? "Pause replay" : "Play replay"}
+              onClick={() => setIsPlaying((current) => !current)}
+            >
+              {isPlaying ? "||" : ">"}
+            </button>
+
             <div className="interview-replay-time">
               <strong>{formatReplayOffset(currentTimeMs)}</strong>
               <span>/ {formatReplayOffset(durationMs)}</span>
@@ -298,20 +297,11 @@ export default function InterviewReplayPage() {
             />
 
             <div className="interview-replay-buttons">
-              <button
-                type="button"
-                className="comment-submit"
-                disabled={durationMs <= 0}
-                onClick={() => setIsPlaying((current) => !current)}
-              >
-                {isPlaying ? "Pause" : "Play"}
-              </button>
-
               {PLAYBACK_SPEEDS.map((speed) => (
                 <button
                   key={speed}
                   type="button"
-                  className={`hero-link-button${
+                  className={`btn-secondary cs-speed-btn${
                     playbackSpeed === speed ? " is-active" : ""
                   }`}
                   onClick={() => setPlaybackSpeed(speed)}
@@ -321,8 +311,8 @@ export default function InterviewReplayPage() {
               ))}
             </div>
           </section>
-        </>
+        </div>
       )}
-    </main>
+    </div>
   );
 }

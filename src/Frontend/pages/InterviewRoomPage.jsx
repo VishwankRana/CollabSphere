@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { useAuth } from "../auth/useAuth.jsx";
+import AppTopBar from "../components/AppTopBar";
 import ChatPanel from "../components/ChatPanel";
 import CodeOutputPanel from "../components/CodeOutputPanel";
 import CollaborativeCodeEditor from "../components/CollaborativeCodeEditor";
@@ -37,6 +38,8 @@ export default function InterviewRoomPage() {
   const [endNotes, setEndNotes] = useState("");
   const [endingInterview, setEndingInterview] = useState(false);
   const [endError, setEndError] = useState("");
+  const [socketError, setSocketError] = useState("");
+  const [connectionStatus, setConnectionStatus] = useState("connecting");
 
   const isCandidate =
     roomState?.role === "candidate" && roomState?.status !== "ended";
@@ -89,8 +92,8 @@ export default function InterviewRoomPage() {
       return undefined;
     }
 
-    const leaveRoom = joinInterviewSocketRoom(roomState.id);
-    const socket = getInterviewSocket();
+    const leaveRoom = joinInterviewSocketRoom(roomState.id, token);
+    const socket = getInterviewSocket(token);
 
     const handleLanguageChanged = ({ language: nextLanguage, changedBy }) => {
       setLanguage(nextLanguage);
@@ -116,9 +119,35 @@ export default function InterviewRoomPage() {
       setRunResult(result);
     };
 
-    const handleConnectError = () => {
-      setIsRunning(false);
-      setRunError("Lost connection to the interview server. Refresh the page and try again.");
+    const handleConnect = () => {
+      setSocketError("");
+      setConnectionStatus("synced");
+    };
+
+    const handleConnectError = (error) => {
+      setConnectionStatus("disconnected");
+      const message = error?.message || "";
+
+      if (message.includes("Authentication required")) {
+        setSocketError("Interview socket authentication failed. Log out and sign in again.");
+        return;
+      }
+
+      setSocketError(
+        "Lost connection to the interview server. Check that the backend is running and refresh the page."
+      );
+    };
+
+    const handleDisconnect = (reason) => {
+      if (reason === "io client disconnect") {
+        return;
+      }
+
+      setConnectionStatus("disconnected");
+
+      setSocketError(
+        "Lost connection to the interview server. Check that the backend is running and refresh the page."
+      );
     };
 
     const handleRoomEnded = () => {
@@ -147,7 +176,9 @@ export default function InterviewRoomPage() {
     socket.on("code:running", handleCodeRunning);
     socket.on("code:result", handleCodeResult);
     socket.on("room:ended", handleRoomEnded);
+    socket.on("connect", handleConnect);
     socket.on("connect_error", handleConnectError);
+    socket.on("disconnect", handleDisconnect);
 
     if (roomState.role === "interviewer") {
       socket.on("cheat:flagged", handleCheatFlagged);
@@ -158,11 +189,13 @@ export default function InterviewRoomPage() {
       socket.off("code:running", handleCodeRunning);
       socket.off("code:result", handleCodeResult);
       socket.off("room:ended", handleRoomEnded);
+      socket.off("connect", handleConnect);
       socket.off("connect_error", handleConnectError);
+      socket.off("disconnect", handleDisconnect);
       socket.off("cheat:flagged", handleCheatFlagged);
       leaveRoom();
     };
-  }, [navigate, roomState?.id, roomState?.role, user.name]);
+  }, [navigate, roomState?.id, roomState?.role, token, user.name]);
 
   useEffect(() => {
     if (!isRunning) {
@@ -191,7 +224,7 @@ export default function InterviewRoomPage() {
 
     const timer = window.setTimeout(() => {
       setCheatAlert("");
-    }, 5000);
+    }, 8000);
 
     return () => {
       window.clearTimeout(timer);
@@ -210,7 +243,7 @@ export default function InterviewRoomPage() {
     setLanguageMessage("");
 
     if (roomState.role === "interviewer") {
-      getInterviewSocket().emit("language:change", {
+      getInterviewSocket(token).emit("language:change", {
         roomId: roomState.id,
         language: nextLanguage,
       });
@@ -229,7 +262,7 @@ export default function InterviewRoomPage() {
     setRunError("");
     setIsRunning(true);
 
-    getInterviewSocket().emit("code:run", {
+    getInterviewSocket(token).emit("code:run", {
       roomId: roomState.id,
       code,
       language,
@@ -270,7 +303,7 @@ export default function InterviewRoomPage() {
   }
 
   function handleLeaveRoom() {
-    getInterviewSocket().emit("room:leave", { roomId: roomState?.id });
+    getInterviewSocket(token).emit("room:leave", { roomId: roomState?.id });
     navigate("/");
   }
 
@@ -304,20 +337,28 @@ export default function InterviewRoomPage() {
   }
 
   if (loading) {
-    return <main className="auth-shell">Loading interview room...</main>;
+    return (
+      <div className="cs-app">
+        <AppTopBar connectionStatus="connecting" variant="room" />
+        <main className="auth-shell">Loading interview room...</main>
+      </div>
+    );
   }
 
   if (error || !roomState) {
     return (
-      <main className="auth-shell">
-        <section className="auth-card">
-          <h1>Interview unavailable</h1>
-          <p className="hero-copy">{error || "Unable to load this interview room."}</p>
-          <Link className="comment-submit" to="/">
-            Back to dashboard
-          </Link>
-        </section>
-      </main>
+      <div className="cs-app">
+        <AppTopBar />
+        <main className="auth-shell">
+          <section className="auth-card">
+            <h1>Interview unavailable</h1>
+            <p className="hero-copy">{error || "Unable to load this interview room."}</p>
+            <Link className="btn-primary" to="/">
+              Back to dashboard
+            </Link>
+          </section>
+        </main>
+      </div>
     );
   }
 
@@ -325,86 +366,137 @@ export default function InterviewRoomPage() {
   const canChangeLanguage = roomState.role === "interviewer" && !readOnly;
   const canRunCode = !readOnly;
   const hasTestCases = (roomState.testCases?.length || 0) > 0;
+  const roomTitle = roomState.candidate?.name
+    ? `${roomState.title} – ${roomState.candidate.name}`
+    : roomState.title;
 
   return (
-    <main className="interview-room-shell">
+    <div className="cs-app">
+      <AppTopBar
+        connectionStatus={connectionStatus}
+        roomStatus={roomState.status}
+        roomTitle={roomTitle}
+        showActiveDot={roomState.status === "active"}
+        variant="room"
+      />
+
       {cheatAlert ? (
-        <div className="interview-cheat-toast" role="status">
-          {cheatAlert}
+        <div className="cs-cheat-banner" role="status">
+          <span>{cheatAlert}</span>
+          <button
+            type="button"
+            className="cs-cheat-banner-dismiss"
+            aria-label="Dismiss alert"
+            onClick={() => setCheatAlert("")}
+          >
+            x
+          </button>
         </div>
       ) : null}
 
-      <section className="interview-room-header">
-        <div>
-          <p className="panel-kicker">Interview room</p>
-          <h1>{roomState.title}</h1>
-          <p className="hero-copy">
-            Role: <strong>{roomState.role}</strong> · Status:{" "}
-            <strong>{roomState.status}</strong>
-          </p>
-          {languageMessage ? <p className="access-message">{languageMessage}</p> : null}
+      {runError || socketError || languageMessage ? (
+        <div className="cs-room-errors">
+          {[runError, socketError, languageMessage].filter(Boolean).join(" · ")}
         </div>
+      ) : null}
 
-        <div className="interview-room-actions">
-          <LanguageSelector
-            disabled={!canChangeLanguage}
-            readOnly={!canChangeLanguage}
-            value={language}
-            onChange={handleLanguageChange}
-          />
+      <main className="interview-room-shell">
+        <div className="cs-room-viewport">
+          <div className="cs-room-workspace">
+            <section className="interview-room-layout">
+              <ProblemPanel
+                collapsed={problemCollapsed}
+                problem={roomState.problem}
+                testCases={roomState.testCases}
+                onToggleCollapsed={() => setProblemCollapsed((current) => !current)}
+              />
 
-          {canRunCode ? (
-            <>
-              <button
-                type="button"
-                className="comment-submit"
-                disabled={isRunning}
-                onClick={handleRunCode}
-              >
-                {isRunning ? "Running..." : "Run"}
-              </button>
-              {hasTestCases ? (
-                <button
-                  type="button"
-                  className="hero-link-button"
-                  disabled={isRunningTests || isRunning}
-                  onClick={handleRunTests}
-                >
-                  {isRunningTests ? "Running tests..." : "Run tests"}
-                </button>
-              ) : null}
-            </>
-          ) : null}
+              <div className="interview-room-main">
+                <div className="cs-editor-topbar">
+                  <div className="cs-editor-topbar-left">
+                    <LanguageSelector
+                      disabled={!canChangeLanguage}
+                      readOnly={!canChangeLanguage}
+                      value={language}
+                      onChange={handleLanguageChange}
+                    />
+                  </div>
 
-          {roomState.role === "interviewer" && roomState.inviteToken ? (
-            <div className="interview-invite-chip">
-              Invite code: <strong>{roomState.inviteToken}</strong>
-            </div>
-          ) : null}
+                  <div className="cs-editor-topbar-right">
+                    {canRunCode ? (
+                      <>
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          disabled={isRunning}
+                          onClick={handleRunCode}
+                        >
+                          {isRunning ? "Running..." : "Run Code"}
+                        </button>
+                        {hasTestCases ? (
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            disabled={isRunningTests || isRunning}
+                            onClick={handleRunTests}
+                          >
+                            {isRunningTests ? "Running tests..." : "Run tests"}
+                          </button>
+                        ) : null}
+                      </>
+                    ) : null}
 
-          {roomState.role === "interviewer" && !readOnly ? (
-            <button
-              type="button"
-              className="hero-link-button interview-end-button"
-              onClick={() => setShowEndDialog(true)}
-            >
-              End interview
-            </button>
-          ) : null}
+                    {roomState.role === "interviewer" && !readOnly ? (
+                      <button
+                        type="button"
+                        className="btn-danger interview-end-button"
+                        onClick={() => setShowEndDialog(true)}
+                      >
+                        End Interview
+                      </button>
+                    ) : null}
 
-          {roomState.role === "interviewer" && readOnly ? (
-            <Link className="hero-link-button" to={`/rooms/${roomState.id}/analytics`}>
-              Analytics
-            </Link>
-          ) : null}
+                    {roomState.role === "interviewer" && readOnly ? (
+                      <Link className="btn-secondary" to={`/rooms/${roomState.id}/analytics`}>
+                        Analytics
+                      </Link>
+                    ) : null}
 
-          {roomState.role === "candidate" && !readOnly ? (
-            <button type="button" className="hero-link-button" onClick={handleLeaveRoom}>
-              Leave room
-            </button>
-          ) : null}
+                    {roomState.role === "candidate" && !readOnly ? (
+                      <button type="button" className="btn-ghost" onClick={handleLeaveRoom}>
+                        Leave
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="interview-editor-panel">
+                  <CollaborativeCodeEditor
+                    ref={editorRef}
+                    language={language}
+                    readOnly={readOnly}
+                    roomId={roomState.id}
+                    starterCode={roomState.starterCode}
+                    userName={user.name}
+                    userRole={roomState.role}
+                  />
+                </div>
+
+                <CodeOutputPanel
+                  isRunning={isRunning}
+                  readOnly={readOnly}
+                  result={runResult}
+                  stdin={stdin}
+                  testResults={testResults}
+                  onStdinChange={setStdin}
+                />
+              </div>
+            </section>
+          </div>
+
+          <ChatPanel key={roomState.id} readOnly={readOnly} roomId={roomState.id} />
         </div>
-      </section>
+      </main>
 
       {showEndDialog ? (
         <section className="interview-end-dialog">
@@ -441,54 +533,18 @@ export default function InterviewRoomPage() {
             <div className="interview-end-dialog-actions">
               <button
                 type="button"
-                className="hero-link-button"
+                className="btn-secondary"
                 onClick={() => setShowEndDialog(false)}
               >
                 Cancel
               </button>
-              <button className="comment-submit" disabled={endingInterview} type="submit">
+              <button className="btn-danger" disabled={endingInterview} type="submit">
                 {endingInterview ? "Ending..." : "End interview"}
               </button>
             </div>
           </form>
         </section>
       ) : null}
-
-      {runError ? <p className="access-message">{runError}</p> : null}
-
-      <section className="interview-room-layout">
-        <ProblemPanel
-          collapsed={problemCollapsed}
-          problem={roomState.problem}
-          testCases={roomState.testCases}
-          onToggleCollapsed={() => setProblemCollapsed((current) => !current)}
-        />
-
-        <div className="interview-room-main">
-          <div className="interview-editor-panel">
-            <CollaborativeCodeEditor
-              ref={editorRef}
-              language={language}
-              readOnly={readOnly}
-              roomId={roomState.id}
-              starterCode={roomState.starterCode}
-              userName={user.name}
-              userRole={roomState.role}
-            />
-          </div>
-
-          <CodeOutputPanel
-            isRunning={isRunning}
-            readOnly={readOnly}
-            result={runResult}
-            stdin={stdin}
-            testResults={testResults}
-            onStdinChange={setStdin}
-          />
-        </div>
-      </section>
-
-      <ChatPanel key={roomState.id} readOnly={readOnly} roomId={roomState.id} />
-    </main>
+    </div>
   );
 }

@@ -32,12 +32,12 @@ export default function SignupPage() {
   return (
     <main className="auth-shell">
       <section className="auth-card">
-        <p className="eyebrow">CollabSphere</p>
+        <Link className="cs-logo" to="/">
+          <span className="cs-logo-dot" aria-hidden="true" />
+          <span className="font-display">CodeScreen</span>
+        </Link>
         <h1>Create your account</h1>
-        <p className="hero-copy">
-          Sign up to create documents, become an owner, and share editor or
-          viewer access.
-        </p>
+        <p className="hero-copy">Sign up to create interview rooms and collaborate on documents.</p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <input
@@ -70,18 +70,14 @@ export default function SignupPage() {
               }))
             }
           />
-          <button
-            className="comment-submit"
-            disabled={submitting}
-            type="submit"
-          >
-            {submitting ? "Creating..." : "Sign Up"}
+          <button className="btn-primary" disabled={submitting} type="submit">
+            {submitting ? "Creating..." : "Sign up"}
           </button>
           {error ? <p className="access-message">{error}</p> : null}
         </form>
 
         <p className="auth-link">
-          Already have an account? <Link to="/login">Login</Link>
+          Already have an account? <Link to="/login">Log in</Link>
         </p>
       </section>
     </main>

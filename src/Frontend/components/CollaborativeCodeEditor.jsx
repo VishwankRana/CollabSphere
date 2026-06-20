@@ -9,6 +9,7 @@ import {
   isStarterOrEmpty,
   MONACO_LANGUAGE_IDS,
 } from "../lib/interview";
+import { applyCodescreenMonacoTheme } from "../lib/monacoTheme";
 
 const CollaborativeCodeEditor = forwardRef(function CollaborativeCodeEditor(
   {
@@ -132,6 +133,7 @@ const CollaborativeCodeEditor = forwardRef(function CollaborativeCodeEditor(
   const handleEditorMount = (editor, monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
+    applyCodescreenMonacoTheme(monaco);
 
     bindingRef.current?.destroy();
 
@@ -177,7 +179,7 @@ const CollaborativeCodeEditor = forwardRef(function CollaborativeCodeEditor(
           tabSize: 2,
           automaticLayout: true,
         }}
-        theme="vs-light"
+        theme="codescreen-dark"
       />
     </div>
   );

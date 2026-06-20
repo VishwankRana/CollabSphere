@@ -7,7 +7,7 @@ import { apiRequest } from "../lib/api";
 export default function JoinInterviewPage() {
   const { inviteToken } = useParams();
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { isAuthenticated, token, user } = useAuth();
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -44,10 +44,14 @@ export default function JoinInterviewPage() {
   if (error) {
     return (
       <main className="auth-shell">
-        <section className="auth-card">
+        <section className="auth-card cs-join-card">
+          <Link className="cs-logo" to="/">
+            <span className="cs-logo-dot" aria-hidden="true" />
+            <span className="font-display">CodeScreen</span>
+          </Link>
           <h1>Unable to join</h1>
           <p className="hero-copy">{error}</p>
-          <Link className="comment-submit" to="/">
+          <Link className="btn-primary" to="/">
             Back to dashboard
           </Link>
         </section>
@@ -55,5 +59,26 @@ export default function JoinInterviewPage() {
     );
   }
 
-  return <main className="auth-shell">Joining interview room...</main>;
+  return (
+    <main className="auth-shell">
+      <section className="auth-card cs-join-card">
+        <Link className="cs-logo" to="/">
+          <span className="cs-logo-dot" aria-hidden="true" />
+          <span className="font-display">CodeScreen</span>
+        </Link>
+        <p className="hero-copy">You&apos;ve been invited to a coding interview</p>
+
+        {isAuthenticated ? (
+          <p className="hero-copy">
+            Joining as <strong>{user?.name}</strong>
+          </p>
+        ) : null}
+
+        <div className="cs-join-loading">
+          <span className="cs-spinner" aria-hidden="true" />
+          <span>Joining interview room...</span>
+        </div>
+      </section>
+    </main>
+  );
 }

@@ -13,8 +13,8 @@ export default function ProblemPanel({
           <p className="panel-kicker">Problem</p>
           <h2>{problem.title || "Coding challenge"}</h2>
         </div>
-        <button type="button" className="hero-link-button" onClick={onToggleCollapsed}>
-          {collapsed ? "Expand" : "Collapse"}
+        <button type="button" className="btn-ghost btn-icon" onClick={onToggleCollapsed}>
+          {collapsed ? ">" : "<"}
         </button>
       </div>
 

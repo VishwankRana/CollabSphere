@@ -1,6 +1,33 @@
 # Change Log
 
-## 2026-06-19 — Module 1: Interview platform MongoDB models
+## 2026-06-19 — CodeScreen UI redesign (interview platform)
+
+- **Timestamp:** 2026-06-19
+- **Files changed:**
+  - `index.html`
+  - `src/Frontend/main.jsx`
+  - `src/Frontend/index.css`
+  - `src/Frontend/styles/codescreen.css` (new)
+  - `src/Frontend/lib/monacoTheme.js` (new)
+  - `src/Frontend/components/AppTopBar.jsx` (new)
+  - `src/Frontend/components/CollaborativeCodeEditor.jsx`
+  - `src/Frontend/components/LanguageSelector.jsx`
+  - `src/Frontend/components/CodeOutputPanel.jsx`
+  - `src/Frontend/components/ChatPanel.jsx`
+  - `src/Frontend/components/ProblemPanel.jsx`
+  - `src/Frontend/pages/InterviewRoomPage.jsx`
+  - `src/Frontend/pages/InterviewDashboardPage.jsx`
+  - `src/Frontend/pages/CreateInterviewRoomPage.jsx`
+  - `src/Frontend/pages/InterviewAnalyticsPage.jsx`
+  - `src/Frontend/pages/InterviewReplayPage.jsx`
+  - `src/Frontend/pages/JoinInterviewPage.jsx`
+  - `src/Frontend/pages/InterviewEndedPage.jsx`
+  - `src/Frontend/pages/LoginPage.jsx`
+  - `src/Frontend/pages/SignupPage.jsx`
+- **Summary of change:** Redesigned the interview platform UI with a dark CodeScreen design system (CSS variables, Inter/Space Grotesk/JetBrains Mono typography), global top bar, full-viewport interview room layout, Monaco `codescreen-dark` theme, tabbed output panel, table dashboard, and restyled auth/analytics/replay pages. UI-only; no backend or business logic changes.
+- **Impacted modules:** Frontend interview UI, shared global styles
+- **Risk level:** Low
+
 
 - **Timestamp:** 2026-06-19
 - **Files changed:**

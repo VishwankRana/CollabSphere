@@ -1,6 +1,7 @@
 import { createContext, useEffect, useMemo, useState } from "react";
 
 import { apiRequest } from "../lib/api";
+import { disconnectInterviewSocket } from "../lib/interviewSocket";
 
 const TOKEN_STORAGE_KEY = "collab-auth-token";
 
@@ -44,6 +45,8 @@ export function AuthProvider({ children }) {
       authLoading,
       isAuthenticated: Boolean(token && user),
       async login(credentials) {
+        disconnectInterviewSocket();
+
         const data = await apiRequest("/api/auth/login", {
           method: "POST",
           body: credentials,
@@ -55,6 +58,8 @@ export function AuthProvider({ children }) {
         return data.user;
       },
       async signup(credentials) {
+        disconnectInterviewSocket();
+
         const data = await apiRequest("/api/auth/signup", {
           method: "POST",
           body: credentials,
@@ -70,6 +75,7 @@ export function AuthProvider({ children }) {
         setUser(null);
         setAuthLoading(false);
         localStorage.removeItem(TOKEN_STORAGE_KEY);
+        disconnectInterviewSocket();
       },
     };
   }, [authLoading, token, user]);
