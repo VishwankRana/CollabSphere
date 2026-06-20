@@ -1,5 +1,13 @@
 # Change Log
 
+## 2026-06-21 — GitHub README
+
+- **Timestamp:** 2026-06-21
+- **Files changed:** `README.md`
+- **Summary of change:** Rewrote project README with name, description, features, and tech stack for CodeScreen interview platform and collaborative documents.
+- **Impacted modules:** Documentation
+- **Risk level:** Low
+
 ## 2026-06-21 — Replay UI cleanup
 
 - **Timestamp:** 2026-06-21

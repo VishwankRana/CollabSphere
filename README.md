@@ -1,68 +1,87 @@
-# Collaborative App
+# CodeScreen
 
-A real-time collaborative document editor built with React, Tiptap, Yjs, WebSockets, Express, and MongoDB.
+A real-time collaborative coding interview platform with live Monaco editing, question bank, analytics, and session replay — plus a shared document editor built on the same Yjs collaboration stack.
 
-This project lets multiple users work inside the same document, see live collaboration cursors and organize multiple documents under their account.
+---
+
+## About
+
+**CodeScreen** helps interviewers run live technical interviews and lets candidates code together in real time. Interviewers can create rooms from a built-in question bank or custom problems, invite candidates with a shareable code, run code and tests, review analytics, and replay sessions afterward.
+
+The project also includes a **collaborative document editor** where multiple users can edit rich-text documents with live cursors, role-based access, and MongoDB-backed persistence.
+
+Both experiences share authentication, WebSocket infrastructure, and Yjs CRDT sync for conflict-free multi-user editing.
+
+---
 
 ## Features
 
-- Real-time collaborative editing with Yjs and WebSockets
-- JWT-based authentication with signup and login
-- Role-based access control
-- Roles: `owner`, `editor`, `viewer`
-- Multi-document workspace
-- Share document access by email
-- Owner-managed collaborator permissions
-- Live collaboration cursor UI
-- MongoDB persistence for document content
-- Modern responsive editor UI
+### Interview platform
+
+- **Live coding rooms** — Monaco editor with JavaScript, Python, Java, and C++
+- **Real-time collaboration** — Yjs + y-monaco sync with live cursors (name + role color)
+- **Offline resilience** — IndexedDB caching and automatic merge on reconnect
+- **Question bank** — 16 built-in LeetCode-style problems plus custom questions (create, edit, filter, use in interviews)
+- **Room creation** — Pick from the question bank or write a custom problem with test cases and starter code
+- **Code execution** — Run code and hidden/visible test cases via backend execution service
+- **In-room chat** — Real-time messaging between interviewer and candidate
+- **Anti-cheat signals** — Tab/window focus monitoring for candidates
+- **Interview analytics** — Duration, run timeline, integrity signals, final score, and notes
+- **Session replay** — Scrub through recorded code snapshots and chat history
+- **Role-based dashboard** — Separate Interviewer and Candidate views for past sessions
+- **Invite flow** — Copy invite code from the room; candidates join via code or link
+
+### Collaborative documents
+
+- **Rich-text editing** — Tiptap editor with Markdown support
+- **Live cursors** — See collaborators’ presence and cursor positions in real time
+- **Access control** — Owner, editor, and viewer roles with email-based sharing
+- **Version history** — Snapshots and restore for document content
+- **MongoDB persistence** — Yjs state stored so content survives restarts
+
+### General
+
+- JWT authentication (signup / login)
+- Collapsible app sidebar and dark CodeScreen UI
+- Responsive layout for dashboard, room, analytics, and question bank pages
+
+---
 
 ## Tech Stack
 
-- Frontend: React, Vite, React Router, Tiptap
-- Realtime: Yjs, `y-websocket`, `ws`
-- Backend: Express
-- Database: MongoDB with Mongoose
-- Auth: Custom JWT implementation
-- Styling: CSS + Tailwind
+### Frontend
 
-## How It Works
+| Area | Technologies |
+|------|----------------|
+| Framework | React 19, Vite 8 |
+| Routing | React Router 7 |
+| Interview editor | Monaco Editor (`@monaco-editor/react`), y-monaco |
+| Document editor | Tiptap, `@tiptap/extension-collaboration`, `@tiptap/extension-collaboration-cursor` |
+| Real-time (client) | Yjs, y-websocket, y-indexeddb |
+| UI | Custom CSS design system, lucide-react icons |
+| Utilities | date-fns, Socket.IO client |
 
-### Authentication
+### Backend
 
-Users can sign up and log in with email and password. After login, the app stores a JWT and uses it for API requests and WebSocket authorization.
+| Area | Technologies |
+|------|----------------|
+| Runtime | Node.js, Express 5 |
+| Database | MongoDB, Mongoose |
+| Auth | Custom JWT (Bearer tokens) |
+| Real-time | WebSocket (`ws`, `@y/websocket-server`), Socket.IO |
+| CRDT sync | Yjs, y-protocols (awareness + sync) |
+| Code execution | JDoodle API integration (configurable via env) |
 
-### Access Control
+### Dev & tooling
 
-Each document supports three roles:
+- ESLint, PostCSS, Tailwind CSS (legacy/global styles)
+- npm scripts: `dev`, `server`, `build`, `seed:questions`
 
-- `owner`: full control, including renaming, deleting, and sharing access
-- `editor`: can open and edit the document
-- `viewer`: can open the document in read-only mode
+---
 
-### Realtime Collaboration
+## Quick start
 
-The editor uses Yjs for shared state and a WebSocket server for live synchronization. Users connected to the same document URL collaborate inside the same room.
-
-### Persistence
-
-Document content is persisted to MongoDB as Yjs state snapshots, so content survives backend restarts.
-
-## Environment Variables
-
-Create a `.env` file in the project root.
-
-- `PORT`: backend server port
-- `MONGO_URI` or `MONGODB_URI`: MongoDB connection string
-- `JWT_SECRET`: secret used to sign auth tokens
-- `CORS_ORIGIN`: allowed frontend origin for API requests, or `*` for local development
-- `VITE_API_BASE_URL`: frontend API base URL
-- `VITE_COLLAB_SERVER_URL`: frontend WebSocket server URL for Yjs collaboration
-- `ALLOW_START_WITHOUT_DB`: optional, set to `true` to boot the server in degraded local-dev mode when MongoDB is unavailable
-
-## Localhost Setup
-
-For local development, use these values:
+1. Create a `.env` file in the project root:
 
 ```env
 PORT=1234
@@ -73,14 +92,24 @@ VITE_API_BASE_URL=http://localhost:1234
 VITE_COLLAB_SERVER_URL=ws://localhost:1234
 ```
 
-Run the backend and frontend in separate terminals:
+2. Install dependencies and seed the question bank (optional):
+
+```bash
+npm install
+npm run seed:questions
+```
+
+3. Run the backend and frontend:
 
 ```bash
 npm run server
-```
-
-```bash
 npm run dev
 ```
 
-Then open `http://localhost:5173`.
+4. Open [http://localhost:5173](http://localhost:5173).
+
+---
+
+## License
+
+ISC
