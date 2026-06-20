@@ -1,5 +1,31 @@
 # Change Log
 
+## 2026-06-19 — Sidebar, density improvements, lucide-react icons
+
+- **Timestamp:** 2026-06-19
+- **Files changed:**
+  - `package.json`, `package-lock.json`
+  - `src/Frontend/App.jsx`
+  - `src/Frontend/components/AppShellLayout.jsx` (new)
+  - `src/Frontend/components/Sidebar.jsx` (new)
+  - `src/Frontend/components/IconLabel.jsx` (new)
+  - `src/Frontend/components/ConnectionStatusBadge.jsx`
+  - `src/Frontend/components/ProblemPanel.jsx`
+  - `src/Frontend/components/CodeOutputPanel.jsx`
+  - `src/Frontend/components/ChatPanel.jsx`
+  - `src/Frontend/components/CollaborativeCodeEditor.jsx`
+  - `src/Frontend/pages/InterviewDashboardPage.jsx`
+  - `src/Frontend/pages/CreateInterviewRoomPage.jsx`
+  - `src/Frontend/pages/InterviewRoomPage.jsx`
+  - `src/Frontend/pages/InterviewAnalyticsPage.jsx`
+  - `src/Frontend/pages/InterviewReplayPage.jsx`
+  - `src/Frontend/pages/SettingsPage.jsx` (new)
+  - `src/Frontend/lib/timeFormat.js` (new)
+  - `src/Frontend/styles/codescreen.css`
+- **Summary of change:** Added persistent collapsible sidebar layout, filled empty UI areas with stats/denser tables/participant strips/analytics sections, replaced text symbols with lucide-react icons throughout, and increased spacing density on dashboard, interview room, and analytics pages.
+- **Impacted modules:** Frontend layout and interview UI
+- **Risk level:** Low
+
 ## 2026-06-19 — CodeScreen UI redesign (interview platform)
 
 - **Timestamp:** 2026-06-19

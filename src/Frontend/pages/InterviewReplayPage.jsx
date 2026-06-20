@@ -2,9 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Editor from "@monaco-editor/react";
 import { formatDistanceToNow } from "date-fns";
 import { useParams, Link } from "react-router-dom";
+import { ArrowLeft, Pause, Play } from "lucide-react";
 
 import { useAuth } from "../auth/useAuth.jsx";
 import AppTopBar from "../components/AppTopBar";
+import IconLabel from "../components/IconLabel";
 import CodeOutputPanel from "../components/CodeOutputPanel";
 import { apiRequest } from "../lib/api";
 import { applyCodescreenMonacoTheme } from "../lib/monacoTheme";
@@ -189,7 +191,9 @@ export default function InterviewReplayPage() {
             <h1>Replay unavailable</h1>
             <p className="hero-copy">{error || "Unable to load this interview replay."}</p>
             <Link className="btn-primary" to={id ? `/rooms/${id}/analytics` : "/"}>
-              Back to analytics
+              <IconLabel icon={ArrowLeft} size={14}>
+                Back to analytics
+              </IconLabel>
             </Link>
           </section>
         </main>
@@ -277,7 +281,7 @@ export default function InterviewReplayPage() {
               aria-label={isPlaying ? "Pause replay" : "Play replay"}
               onClick={() => setIsPlaying((current) => !current)}
             >
-              {isPlaying ? "||" : ">"}
+              {isPlaying ? <Pause size={18} strokeWidth={1.5} /> : <Play size={18} strokeWidth={1.5} />}
             </button>
 
             <div className="interview-replay-time">

@@ -1,4 +1,19 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import {
+  CheckCircle,
+  CheckSquare,
+  Command,
+  CornerDownLeft,
+  Terminal,
+  XCircle,
+} from "lucide-react";
+
+import IconLabel from "./IconLabel";
+
+function getRunShortcutLabel() {
+  const isMac = navigator.platform.toUpperCase().includes("MAC");
+  return isMac ? "Cmd" : "Ctrl";
+}
 
 export default function CodeOutputPanel({
   isRunning = false,
@@ -13,6 +28,7 @@ export default function CodeOutputPanel({
   const passedCount = hasTestResults
     ? testResults.filter((entry) => entry.passed).length
     : 0;
+  const runShortcut = useMemo(() => getRunShortcutLabel(), []);
 
   const showTestsTab = hasTestResults || isRunning;
 
@@ -24,7 +40,9 @@ export default function CodeOutputPanel({
           className={`code-output-tab${activeTab === "output" ? " is-active" : ""}`}
           onClick={() => setActiveTab("output")}
         >
-          Output
+          <IconLabel icon={Terminal} size={14}>
+            Output
+          </IconLabel>
         </button>
         {showTestsTab ? (
           <button
@@ -32,8 +50,10 @@ export default function CodeOutputPanel({
             className={`code-output-tab${activeTab === "tests" ? " is-active" : ""}`}
             onClick={() => setActiveTab("tests")}
           >
-            Test Cases
-            {hasTestResults ? ` (${passedCount}/${testResults.length})` : ""}
+            <IconLabel icon={CheckSquare} size={14}>
+              Test Cases
+              {hasTestResults ? ` (${passedCount}/${testResults.length})` : ""}
+            </IconLabel>
           </button>
         ) : null}
       </div>
@@ -55,13 +75,14 @@ export default function CodeOutputPanel({
           <ul className="code-test-results">
             {testResults.map((entry, index) => (
               <li key={`test-${index}`}>
-                <div className={`code-test-row ${entry.passed ? "code-test-pass" : "code-test-fail"}`}>
-                  <span
-                    className={`code-test-dot ${
-                      entry.passed ? "code-test-dot--pass" : "code-test-dot--fail"
-                    }`}
-                    aria-hidden="true"
-                  />
+                <div
+                  className={`code-test-row ${entry.passed ? "code-test-pass" : "code-test-fail"}`}
+                >
+                  {entry.passed ? (
+                    <CheckCircle size={14} strokeWidth={1.5} />
+                  ) : (
+                    <XCircle size={14} strokeWidth={1.5} />
+                  )}
                   <span>
                     Case {index + 1}: {entry.passed ? "Passed" : "Failed"}
                     {entry.isHidden ? " (hidden)" : ""}
@@ -135,13 +156,33 @@ export default function CodeOutputPanel({
                 ) : null}
               </div>
             ) : !isRunning ? (
-              <p className="code-output-idle">Run your code to see output</p>
+              <div className="code-output-idle-panel">
+                <Terminal size={32} strokeWidth={1.5} />
+                <p>Run your code to see output here</p>
+                {!readOnly ? (
+                  <span className="code-output-shortcut">
+                    <Command size={11} strokeWidth={1.5} />
+                    {runShortcut === "Cmd" ? null : (
+                      <span className="font-mono">{runShortcut}</span>
+                    )}
+                    {runShortcut === "Cmd" ? (
+                      <span className="font-mono">Cmd</span>
+                    ) : null}
+                    <span>+</span>
+                    <CornerDownLeft size={11} strokeWidth={1.5} />
+                    <span>to run</span>
+                  </span>
+                ) : null}
+              </div>
             ) : null}
           </>
         ) : null}
 
         {activeTab === "tests" && !hasTestResults ? (
-          <p className="code-output-idle">Run tests to see results</p>
+          <div className="code-output-idle-panel">
+            <CheckSquare size={28} strokeWidth={1.5} />
+            <p>Run tests to see results</p>
+          </div>
         ) : null}
       </div>
     </section>

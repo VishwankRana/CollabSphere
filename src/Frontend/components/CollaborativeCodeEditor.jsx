@@ -111,6 +111,26 @@ const CollaborativeCodeEditor = forwardRef(function CollaborativeCodeEditor(
 
   useImperativeHandle(ref, () => ({
     getCode: () => ydocRef.current?.getText("code").toString() || "",
+    resetToStarter: () => {
+      const ydoc = ydocRef.current;
+
+      if (!ydoc) {
+        return;
+      }
+
+      const yText = ydoc.getText("code");
+      const template = getStarterCodeForLanguage(language, starterCodeRef.current);
+
+      ydoc.transact(() => {
+        if (yText.length > 0) {
+          yText.delete(0, yText.length);
+        }
+
+        if (template) {
+          yText.insert(0, template);
+        }
+      });
+    },
   }));
 
   const seedStarterCode = useCallback(() => {

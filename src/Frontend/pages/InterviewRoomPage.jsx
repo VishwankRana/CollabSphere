@@ -1,14 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  BarChart2,
+  Clock,
+  LogOut,
+  Play,
+  RefreshCw,
+  StopCircle,
+  X,
+} from "lucide-react";
 
 import { useAuth } from "../auth/useAuth.jsx";
 import AppTopBar from "../components/AppTopBar";
 import ChatPanel from "../components/ChatPanel";
 import CodeOutputPanel from "../components/CodeOutputPanel";
 import CollaborativeCodeEditor from "../components/CollaborativeCodeEditor";
+import ConnectionStatusBadge from "../components/ConnectionStatusBadge";
+import IconLabel from "../components/IconLabel";
 import LanguageSelector from "../components/LanguageSelector";
 import ProblemPanel from "../components/ProblemPanel";
 import { apiRequest } from "../lib/api";
+import { formatElapsedClock } from "../lib/timeFormat";
 import {
   getInterviewSocket,
   joinInterviewSocketRoom,
@@ -40,6 +54,8 @@ export default function InterviewRoomPage() {
   const [endError, setEndError] = useState("");
   const [socketError, setSocketError] = useState("");
   const [connectionStatus, setConnectionStatus] = useState("connecting");
+  const [runCount, setRunCount] = useState(0);
+  const [elapsedMs, setElapsedMs] = useState(0);
 
   const isCandidate =
     roomState?.role === "candidate" && roomState?.status !== "ended";
@@ -117,6 +133,7 @@ export default function InterviewRoomPage() {
     const handleCodeResult = (result) => {
       setIsRunning(false);
       setRunResult(result);
+      setRunCount((current) => current + 1);
     };
 
     const handleConnect = () => {
@@ -231,6 +248,22 @@ export default function InterviewRoomPage() {
     };
   }, [cheatAlert]);
 
+  useEffect(() => {
+    if (!roomState?.startedAt) {
+      return undefined;
+    }
+
+    const start = new Date(roomState.startedAt).getTime();
+
+    function tick() {
+      setElapsedMs(Date.now() - start);
+    }
+
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, [roomState?.startedAt]);
+
   function handleLanguageChange(nextLanguage) {
     if (!roomState || nextLanguage === language) {
       return;
@@ -302,6 +335,10 @@ export default function InterviewRoomPage() {
     }
   }
 
+  function handleResetCode() {
+    editorRef.current?.resetToStarter?.();
+  }
+
   function handleLeaveRoom() {
     getInterviewSocket(token).emit("room:leave", { roomId: roomState?.id });
     navigate("/");
@@ -354,7 +391,9 @@ export default function InterviewRoomPage() {
             <h1>Interview unavailable</h1>
             <p className="hero-copy">{error || "Unable to load this interview room."}</p>
             <Link className="btn-primary" to="/">
-              Back to dashboard
+              <IconLabel icon={ArrowLeft} size={14}>
+                Back to dashboard
+              </IconLabel>
             </Link>
           </section>
         </main>
@@ -382,14 +421,17 @@ export default function InterviewRoomPage() {
 
       {cheatAlert ? (
         <div className="cs-cheat-banner" role="status">
-          <span>{cheatAlert}</span>
+          <span className="icon-label">
+            <AlertTriangle size={14} strokeWidth={1.5} />
+            {cheatAlert}
+          </span>
           <button
             type="button"
             className="cs-cheat-banner-dismiss"
             aria-label="Dismiss alert"
             onClick={() => setCheatAlert("")}
           >
-            x
+            <X size={14} strokeWidth={1.5} />
           </button>
         </div>
       ) : null}
@@ -405,9 +447,12 @@ export default function InterviewRoomPage() {
           <div className="cs-room-workspace">
             <section className="interview-room-layout">
               <ProblemPanel
+                candidate={roomState.candidate}
                 collapsed={problemCollapsed}
+                interviewer={roomState.interviewer}
                 problem={roomState.problem}
                 testCases={roomState.testCases}
+                testResults={testResults}
                 onToggleCollapsed={() => setProblemCollapsed((current) => !current)}
               />
 
@@ -420,9 +465,32 @@ export default function InterviewRoomPage() {
                       value={language}
                       onChange={handleLanguageChange}
                     />
+                    <span className="cs-editor-divider" aria-hidden="true" />
+                    <span className="cs-editor-meta">
+                      <Clock size={14} strokeWidth={1.5} />
+                      {formatElapsedClock(elapsedMs)}
+                    </span>
+                    <span className="cs-editor-divider" aria-hidden="true" />
+                    <button
+                      type="button"
+                      className="btn-ghost btn-icon"
+                      aria-label="Reset to starter code"
+                      title="Reset to starter"
+                      onClick={handleResetCode}
+                    >
+                      <RefreshCw size={14} strokeWidth={1.5} />
+                    </button>
                   </div>
 
                   <div className="cs-editor-topbar-right">
+                    <ConnectionStatusBadge status={connectionStatus} />
+                    <span className="cs-editor-divider" aria-hidden="true" />
+                    <span className="cs-editor-run-count">
+                      <Play size={12} strokeWidth={1.5} />
+                      {runCount} runs
+                    </span>
+                    <span className="cs-editor-divider" aria-hidden="true" />
+
                     {canRunCode ? (
                       <>
                         <button
@@ -431,7 +499,9 @@ export default function InterviewRoomPage() {
                           disabled={isRunning}
                           onClick={handleRunCode}
                         >
-                          {isRunning ? "Running..." : "Run Code"}
+                          <IconLabel icon={Play} size={16}>
+                            {isRunning ? "Running..." : "Run Code"}
+                          </IconLabel>
                         </button>
                         {hasTestCases ? (
                           <button
@@ -452,19 +522,25 @@ export default function InterviewRoomPage() {
                         className="btn-danger interview-end-button"
                         onClick={() => setShowEndDialog(true)}
                       >
-                        End Interview
+                        <IconLabel icon={StopCircle} size={16}>
+                          End Interview
+                        </IconLabel>
                       </button>
                     ) : null}
 
                     {roomState.role === "interviewer" && readOnly ? (
                       <Link className="btn-secondary" to={`/rooms/${roomState.id}/analytics`}>
-                        Analytics
+                        <IconLabel icon={BarChart2} size={16}>
+                          Analytics
+                        </IconLabel>
                       </Link>
                     ) : null}
 
                     {roomState.role === "candidate" && !readOnly ? (
                       <button type="button" className="btn-ghost" onClick={handleLeaveRoom}>
-                        Leave
+                        <IconLabel icon={LogOut} size={16}>
+                          Leave Room
+                        </IconLabel>
                       </button>
                     ) : null}
                   </div>

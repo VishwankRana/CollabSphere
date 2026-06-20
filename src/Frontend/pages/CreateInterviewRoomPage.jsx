@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, Plus, Video } from "lucide-react";
 
 import { useAuth } from "../auth/useAuth.jsx";
-import AppTopBar from "../components/AppTopBar";
+import IconLabel from "../components/IconLabel";
 import LanguageSelector from "../components/LanguageSelector";
 import { apiRequest } from "../lib/api";
 
@@ -85,11 +86,8 @@ export default function CreateInterviewRoomPage() {
   }
 
   return (
-    <div className="cs-app">
-      <AppTopBar />
-
-      <main className="cs-create-shell">
-        <section className="cs-create-card">
+    <main className="cs-create-shell">
+      <section className="cs-create-card">
           <h1 className="font-display">New Interview</h1>
           <p className="cs-page-subtitle">
             Set up a coding room and invite your candidate.
@@ -124,7 +122,7 @@ export default function CreateInterviewRoomPage() {
                 value={problemDescription}
                 onChange={(event) => setProblemDescription(event.target.value)}
                 placeholder="Describe the problem statement, examples, and constraints..."
-                rows={6}
+                rows={8}
               />
             </label>
 
@@ -144,13 +142,15 @@ export default function CreateInterviewRoomPage() {
               <LanguageSelector value={language} onChange={setLanguage} />
             </div>
 
-            {!showTestCases ? (
+              {!showTestCases ? (
               <button
                 className="btn-ghost"
                 type="button"
                 onClick={() => setShowTestCases(true)}
               >
-                + Add test cases
+                <IconLabel icon={Plus} size={14}>
+                  Add test cases
+                </IconLabel>
               </button>
             ) : (
               <div className="interview-form-field">
@@ -210,15 +210,18 @@ export default function CreateInterviewRoomPage() {
 
             <div className="cs-form-footer">
               <Link className="btn-secondary" to="/">
-                Cancel
+                <IconLabel icon={ArrowLeft} size={14}>
+                  Cancel
+                </IconLabel>
               </Link>
               <button className="btn-primary" disabled={submitting} type="submit">
-                {submitting ? "Creating..." : "Create Room & Get Invite Link →"}
+                <IconLabel icon={Video} size={16}>
+                  {submitting ? "Creating..." : "Create Room & Get Invite Link"}
+                </IconLabel>
               </button>
             </div>
           </form>
         </section>
-      </main>
-    </div>
+    </main>
   );
 }

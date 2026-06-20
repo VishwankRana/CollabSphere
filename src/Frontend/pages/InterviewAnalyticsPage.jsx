@@ -1,9 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import Editor from "@monaco-editor/react";
+import {
+  Activity,
+  ArrowLeft,
+  Clipboard,
+  Clock,
+  Code,
+  Eye,
+  FileCode,
+  Monitor,
+  Play,
+  PlayCircle,
+  Save,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  StickyNote,
+  Zap,
+} from "lucide-react";
 
 import { useAuth } from "../auth/useAuth.jsx";
-import AppTopBar from "../components/AppTopBar";
+import IconLabel from "../components/IconLabel";
 import { apiRequest } from "../lib/api";
+import { MONACO_LANGUAGE_IDS } from "../lib/interview";
+import { applyCodescreenMonacoTheme } from "../lib/monacoTheme";
 
 function RunTimeline({ duration, timeline }) {
   if (!timeline?.length) {
@@ -18,7 +39,7 @@ function RunTimeline({ duration, timeline }) {
 
   return (
     <div className="analytics-timeline">
-      <div className="analytics-timeline-track" aria-hidden="true">
+      <div className="analytics-timeline-track analytics-timeline-track--dense" aria-hidden="true">
         {timeline.map((entry, index) => {
           const offset =
             ((new Date(entry.time).getTime() - startTime) / spanMs) * 100;
@@ -27,19 +48,19 @@ function RunTimeline({ duration, timeline }) {
           return (
             <span
               key={`${entry.time}-${index}`}
-              className={`analytics-timeline-dot${
+              className={`analytics-timeline-dot analytics-timeline-tick${
                 entry.exitCode === 0 ? " is-passed" : " is-failed"
               }`}
               style={{ left: position }}
-              title={`Run at ${new Date(entry.time).toLocaleTimeString()} — ${
-                entry.exitCode === 0 ? "Passed" : "Failed"
+              title={`${new Date(entry.time).toLocaleTimeString()} · exit ${
+                entry.exitCode ?? "?"
               }`}
             />
           );
         })}
       </div>
       <div className="analytics-timeline-labels">
-        <span>0:00</span>
+        <span>{new Date(startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
         <span>{duration?.formatted || "0:00"}</span>
       </div>
     </div>
@@ -71,11 +92,26 @@ function StatCard({ label, value, className = "" }) {
   );
 }
 
+function IntegrityRow({ icon: Icon, label, count }) {
+  const severityClass = count > 0 ? "integrity-severity--warn" : "integrity-severity--ok";
+
+  return (
+    <div className="integrity-row">
+      <Icon size={14} strokeWidth={1.5} />
+      <span>{label}</span>
+      <span className="integrity-count">{count}</span>
+      <span className={`integrity-severity ${severityClass}`} aria-hidden="true" />
+    </div>
+  );
+}
+
 export default function InterviewAnalyticsPage() {
   const { id } = useParams();
   const { token } = useAuth();
   const [room, setRoom] = useState(null);
   const [analytics, setAnalytics] = useState(null);
+  const [finalCode, setFinalCode] = useState("");
+  const [runInsights, setRunInsights] = useState({ avgExecutionMs: null, lastRunTime: null });
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -92,8 +128,9 @@ export default function InterviewAnalyticsPage() {
     Promise.all([
       apiRequest(`/api/rooms/${id}`, { token }),
       apiRequest(`/api/rooms/${id}/analytics`, { token }),
+      apiRequest(`/api/rooms/${id}/recording`, { token }),
     ])
-      .then(([roomData, analyticsData]) => {
+      .then(([roomData, analyticsData, recordingData]) => {
         if (ignore) {
           return;
         }
@@ -106,8 +143,25 @@ export default function InterviewAnalyticsPage() {
           return;
         }
 
+        const events = recordingData.events || [];
+        const snapshots = events.filter((event) => event.type === "code_snapshot");
+        const runs = events.filter((event) => event.type === "code_run");
+        const lastSnapshot = snapshots.at(-1);
+        const avgExecutionMs = runs.length
+          ? Math.round(
+              runs.reduce((sum, event) => sum + (event.payload?.executionTime || 0), 0) /
+                runs.length
+            )
+          : null;
+        const lastRun = runs.at(-1);
+
         setRoom(roomData.room);
         setAnalytics(analyticsData);
+        setFinalCode(lastSnapshot?.payload?.code || "");
+        setRunInsights({
+          avgExecutionMs,
+          lastRunTime: lastRun?.timestamp || null,
+        });
         setNotes(roomData.room.notes || "");
         setError("");
         setLoading(false);
@@ -153,29 +207,26 @@ export default function InterviewAnalyticsPage() {
     }
   }
 
+  const language = useMemo(
+    () => MONACO_LANGUAGE_IDS[room?.language || analytics?.languageUsed || "javascript"] || "javascript",
+    [room?.language, analytics?.languageUsed]
+  );
+
   if (loading) {
-    return (
-      <div className="cs-app">
-        <AppTopBar />
-        <main className="auth-shell">Loading interview analytics...</main>
-      </div>
-    );
+    return <main className="auth-shell">Loading interview analytics...</main>;
   }
 
   if (error || !room || !analytics) {
     return (
-      <div className="cs-app">
-        <AppTopBar />
-        <main className="auth-shell">
-          <section className="auth-card">
-            <h1>Analytics unavailable</h1>
-            <p className="hero-copy">{error || "Unable to load interview analytics."}</p>
-            <Link className="btn-primary" to={id ? `/rooms/${id}` : "/"}>
-              Back to room
-            </Link>
-          </section>
-        </main>
-      </div>
+      <main className="auth-shell">
+        <section className="auth-card">
+          <h1>Analytics unavailable</h1>
+          <p className="hero-copy">{error || "Unable to load interview analytics."}</p>
+          <Link className="btn-primary" to={id ? `/rooms/${id}` : "/"}>
+            Back to room
+          </Link>
+        </section>
+      </main>
     );
   }
 
@@ -193,102 +244,187 @@ export default function InterviewAnalyticsPage() {
     .join(" · ");
 
   return (
-    <div className="cs-app">
-      <AppTopBar />
+    <main className="interview-analytics-shell">
+      <div className="page-section">
+        <Link className="cs-back-link" to="/">
+          <IconLabel icon={ArrowLeft} size={14}>
+            Interviews
+          </IconLabel>
+        </Link>
+        <h1 className="font-display">Interview Analytics</h1>
+        <p className="cs-page-subtitle">{subtitle}</p>
+      </div>
 
-      <main className="interview-analytics-shell">
-        <div>
-          <Link className="cs-back-link" to="/">
-            ← Interviews
-          </Link>
-          <h1 className="font-display">Interview Analytics</h1>
-          <p className="cs-page-subtitle">{subtitle}</p>
+      <section className="analytics-stat-grid page-section">
+        <StatCard label="Duration" value={analytics.duration?.formatted || "0:00"} />
+        <StatCard label="Total runs" value={analytics.codeExecution?.total ?? 0} />
+        <StatCard label="Errors" value={analytics.codeExecution?.errors ?? 0} />
+        <StatCard
+          className={getScoreClass(analytics.finalScore)}
+          label="Score"
+          value={scoreLabel}
+        />
+      </section>
+
+      <section className="analytics-panel analytics-section-card page-section">
+        <div className="section-header">
+          <IconLabel icon={Activity} size={16}>
+            Code Activity
+          </IconLabel>
+        </div>
+        <RunTimeline duration={analytics.duration} timeline={analytics.timeline} />
+        <div className="analytics-mini-stats">
+          <span className="analytics-mini-stat">
+            <Zap size={13} strokeWidth={1.5} />
+            Avg execution: {runInsights.avgExecutionMs ?? "—"}ms
+          </span>
+          <span className="analytics-mini-stat">
+            <Code size={13} strokeWidth={1.5} />
+            Language: {analytics.languageUsed || room.language}
+          </span>
+          <span className="analytics-mini-stat">
+            <Clock size={13} strokeWidth={1.5} />
+            Last run:{" "}
+            {runInsights.lastRunTime
+              ? new Date(runInsights.lastRunTime).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "—"}
+          </span>
+        </div>
+      </section>
+
+      <section className="analytics-panel analytics-section-card page-section">
+        <div className="section-header">
+          <IconLabel icon={Shield} size={16}>
+            Integrity Signals
+          </IconLabel>
         </div>
 
-        <section className="analytics-stat-grid">
-          <StatCard label="Duration" value={analytics.duration?.formatted || "0:00"} />
-          <StatCard label="Total runs" value={analytics.codeExecution?.total ?? 0} />
-          <StatCard label="Errors" value={analytics.codeExecution?.errors ?? 0} />
-          <StatCard
-            className={getScoreClass(analytics.finalScore)}
-            label="Score"
-            value={scoreLabel}
-          />
-        </section>
-
-        <section className="analytics-panel">
-          <div className="analytics-panel-header">
-            <h2>Code Runs</h2>
-            <p className="hero-copy">
-              Green dots passed (exit code 0). Red dots failed or errored.
-            </p>
-          </div>
-          <RunTimeline duration={analytics.duration} timeline={analytics.timeline} />
-        </section>
-
-        <section className="analytics-panel">
-          <div className="analytics-panel-header">
-            <h2>Integrity Signals</h2>
+        <div className="analytics-integrity-grid">
+          <div>
+            <IntegrityRow icon={Eye} count={antiCheat.tabSwitches || 0} label="Tab Switches" />
+            <IntegrityRow
+              icon={Clipboard}
+              count={antiCheat.pasteEvents || 0}
+              label="Paste Events"
+            />
+            <IntegrityRow icon={Monitor} count={antiCheat.focusLoss || 0} label="Focus Loss" />
+            <IntegrityRow
+              icon={Clock}
+              count={antiCheat.inactivityFlags || 0}
+              label="Inactivity"
+            />
           </div>
 
-          {antiCheat.totalFlags ? (
-            <ul className="analytics-flag-list">
-              <li>{antiCheat.tabSwitches || 0} tab switches detected</li>
-              <li>{antiCheat.focusLoss || 0} window focus losses detected</li>
-              <li>{antiCheat.pasteEvents || 0} paste events detected</li>
-              <li>{antiCheat.inactivityFlags || 0} inactivity flags</li>
-            </ul>
-          ) : (
-            <p className="analytics-clean">No integrity flags detected</p>
-          )}
-
-          <p className="analytics-meta">
-            Language used: <strong>{analytics.languageUsed || room.language}</strong> · Final
-            code length: <strong>{analytics.finalCodeLength ?? 0}</strong> characters
-          </p>
-        </section>
-
-        <section className="analytics-panel">
-          <div className="analytics-panel-header">
-            <h2>Interviewer Notes (private)</h2>
+          <div
+            className={`integrity-summary-card ${
+              antiCheat.totalFlags ? "integrity-summary-card--warn" : "integrity-summary-card--clean"
+            }`}
+          >
+            {antiCheat.totalFlags ? (
+              <>
+                <ShieldAlert size={32} strokeWidth={1.5} />
+                <strong>{antiCheat.totalFlags} flags detected</strong>
+                <p className="hero-copy">Review the session replay for context.</p>
+                <Link className="btn-ghost" to={`/rooms/${room.id}/replay`}>
+                  <IconLabel icon={Play} size={14}>
+                    View Replay
+                  </IconLabel>
+                </Link>
+              </>
+            ) : (
+              <>
+                <ShieldCheck size={32} strokeWidth={1.5} />
+                <strong>No integrity flags</strong>
+                <p className="hero-copy">Candidate stayed focused throughout.</p>
+              </>
+            )}
           </div>
+        </div>
+      </section>
 
-          <textarea
-            className="comment-input"
-            value={notes}
-            onBlur={handleSaveNotes}
-            onChange={(event) => setNotes(event.target.value)}
-            placeholder="Private notes about this candidate and interview..."
-            rows={6}
-          />
+      <section className="analytics-panel analytics-section-card page-section">
+        <div className="section-header">
+          <IconLabel icon={StickyNote} size={16}>
+            Interviewer Notes (private)
+          </IconLabel>
+        </div>
 
-          <div className="analytics-notes-actions">
-            <button
-              type="button"
-              className="btn-secondary"
-              disabled={savingNotes}
-              onClick={handleSaveNotes}
-            >
+        <textarea
+          className="comment-input"
+          value={notes}
+          onBlur={handleSaveNotes}
+          onChange={(event) => setNotes(event.target.value)}
+          placeholder="Private notes about this candidate and interview..."
+          rows={6}
+        />
+
+        <div className="analytics-notes-actions">
+          <button
+            type="button"
+            className="btn-secondary"
+            disabled={savingNotes}
+            onClick={handleSaveNotes}
+          >
+            <IconLabel icon={Save} size={16}>
               {savingNotes ? "Saving..." : "Save notes"}
-            </button>
-            {notesMessage === "Saved" ? (
-              <span className="cs-save-indicator">{notesMessage}</span>
-            ) : null}
-            {notesMessage && notesMessage !== "Saved" ? (
-              <p className="access-message">{notesMessage}</p>
-            ) : null}
-          </div>
-        </section>
-
-        <div className="cs-analytics-footer">
-          <Link className="btn-secondary" to="/">
-            ← Back to Interviews
-          </Link>
-          <Link className="btn-primary" to={`/rooms/${room.id}/replay`}>
-            View Replay →
-          </Link>
+            </IconLabel>
+          </button>
+          {notesMessage === "Saved" ? (
+            <span className="cs-save-indicator">{notesMessage}</span>
+          ) : null}
+          {notesMessage && notesMessage !== "Saved" ? (
+            <p className="access-message">{notesMessage}</p>
+          ) : null}
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="analytics-panel analytics-section-card page-section">
+        <div className="section-header">
+          <IconLabel icon={FileCode} size={16}>
+            Final Submission
+          </IconLabel>
+        </div>
+
+        <div className="analytics-code-preview">
+          <Editor
+            height="200px"
+            language={language}
+            value={finalCode || "// No final code snapshot recorded."}
+            onMount={(_editor, monaco) => applyCodescreenMonacoTheme(monaco)}
+            options={{
+              readOnly: true,
+              minimap: { enabled: false },
+              lineNumbers: "off",
+              scrollBeyondLastLine: false,
+              wordWrap: "on",
+              scrollbar: { vertical: "hidden", horizontal: "hidden" },
+            }}
+            theme="codescreen-dark"
+          />
+        </div>
+        <p className="analytics-code-preview-meta">
+          <span className={`cs-badge cs-badge--role-candidate`}>{room.language}</span>
+          {runInsights.lastRunTime
+            ? ` · Last run: ${new Date(runInsights.lastRunTime).toLocaleString()}`
+            : ""}
+        </p>
+      </section>
+
+      <div className="cs-analytics-footer page-section">
+        <Link className="btn-secondary" to="/">
+          <IconLabel icon={ArrowLeft} size={14}>
+            Back to Interviews
+          </IconLabel>
+        </Link>
+        <Link className="btn-primary" to={`/rooms/${room.id}/replay`}>
+          <IconLabel icon={PlayCircle} size={16}>
+            View Replay
+          </IconLabel>
+        </Link>
+      </div>
+    </main>
   );
 }

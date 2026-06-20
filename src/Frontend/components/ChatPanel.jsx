@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { ArrowRight, ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
 
 import { getInterviewSocket } from "../lib/interviewSocket";
+import IconLabel from "./IconLabel";
 
 function formatTimestamp(value) {
   if (!value) {
@@ -82,17 +84,20 @@ export default function ChatPanel({ roomId, readOnly = false }) {
   return (
     <section className={`interview-chat-panel${collapsed ? " is-collapsed" : ""}`}>
       <div className="interview-chat-header">
+        <span className="chat-header-title">
+          <IconLabel icon={MessageSquare} size={14}>
+            Chat
+          </IconLabel>
+        </span>
         <div className="interview-chat-header-actions">
-          {!collapsed ? (
-            <span className="comment-count">{messages.length}</span>
-          ) : null}
+          {!collapsed ? <span className="comment-count">{messages.length}</span> : null}
           <button
             type="button"
             className="btn-ghost btn-icon"
             aria-label={collapsed ? "Expand chat" : "Collapse chat"}
             onClick={() => setCollapsed((current) => !current)}
           >
-            {collapsed ? "v" : "^"}
+            {collapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
         </div>
       </div>
@@ -101,7 +106,11 @@ export default function ChatPanel({ roomId, readOnly = false }) {
         <>
           <div className="interview-chat-messages">
             {messages.length === 0 ? (
-              <p className="comment-empty">No messages yet. Say hello to start the conversation.</p>
+              <div className="chat-empty-state">
+                <MessageSquare size={28} strokeWidth={1.5} />
+                <p>No messages yet</p>
+                <span>Use chat to discuss the problem</span>
+              </div>
             ) : (
               messages.map((message) => (
                 <article className="interview-chat-message" key={message.id}>
@@ -142,7 +151,7 @@ export default function ChatPanel({ roomId, readOnly = false }) {
                 aria-label="Send message"
                 onClick={sendMessage}
               >
-                &rarr;
+                <ArrowRight size={18} strokeWidth={1.5} />
               </button>
             </div>
           ) : (

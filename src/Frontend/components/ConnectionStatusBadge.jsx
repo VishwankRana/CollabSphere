@@ -1,28 +1,35 @@
+import { RefreshCw, Wifi, WifiOff } from "lucide-react";
+
 const STATUS_CONFIG = {
   synced: {
     label: "Synced",
     className: "connection-synced",
-    showSpinner: false,
+    icon: Wifi,
+    spin: false,
   },
   connected: {
     label: "Syncing",
     className: "connection-syncing",
-    showSpinner: true,
+    icon: RefreshCw,
+    spin: true,
   },
   connecting: {
     label: "Syncing",
     className: "connection-syncing",
-    showSpinner: true,
+    icon: RefreshCw,
+    spin: true,
   },
   disconnected: {
     label: "Offline",
     className: "connection-offline",
-    showSpinner: false,
+    icon: WifiOff,
+    spin: false,
   },
 };
 
 export default function ConnectionStatusBadge({ status }) {
   const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.disconnected;
+  const Icon = config.icon;
 
   return (
     <div
@@ -30,11 +37,7 @@ export default function ConnectionStatusBadge({ status }) {
       aria-live="polite"
       aria-label={`Connection status: ${config.label}`}
     >
-      {config.showSpinner ? (
-        <span className="connection-status-spinner" aria-hidden="true" />
-      ) : (
-        <span className="connection-status-dot" aria-hidden="true" />
-      )}
+      <Icon className={config.spin ? "is-spinning" : ""} size={13} strokeWidth={1.5} />
       <span>{config.label}</span>
     </div>
   );
