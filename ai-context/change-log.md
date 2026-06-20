@@ -1,5 +1,21 @@
 # Change Log
 
+## 2026-06-19 — Interview Yjs collab: cursors, offline sync, persistence
+
+- **Timestamp:** 2026-06-19
+- **Files changed:**
+  - `src/Frontend/components/CollaborativeCodeEditor.jsx`
+  - `src/Frontend/lib/monacoAwarenessCursors.js` (new)
+  - `src/Frontend/yjs/connectionStatus.js` (new)
+  - `src/Frontend/yjs/interviewProvider.js`
+  - `src/Frontend/yjs/provider.js`
+  - `src/Frontend/pages/InterviewRoomPage.jsx`
+  - `src/Frontend/styles/codescreen.css`
+  - `src/Backend/Server.js`
+- **Summary of change:** Added Monaco live cursors with user name and role color via Yjs awareness; Yjs connection status and offline toast with IndexedDB-backed reconnect merge; persisted interview room Yjs state to MongoDB for server-side recovery.
+- **Impacted modules:** Interview room collaboration
+- **Risk level:** Medium
+
 ## 2026-06-19 — Dashboard role filter and problem difficulty
 
 - **Timestamp:** 2026-06-19

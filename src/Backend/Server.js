@@ -101,6 +101,16 @@ setPersistence({
   async bindState(docId, ydoc) {
     if (docId.startsWith("interview-")) {
       startInterviewSnapshotTimer(docId.slice("interview-".length));
+      await loadYDocState(docId, ydoc);
+
+      ydoc.on("update", async () => {
+        try {
+          await persistDocumentState(docId, ydoc);
+        } catch (error) {
+          console.error(`Failed to persist interview room ${docId}:`, error);
+        }
+      });
+
       return;
     }
 
@@ -130,6 +140,7 @@ setPersistence({
   },
   async writeState(docId, ydoc) {
     if (docId.startsWith("interview-")) {
+      await persistDocumentState(docId, ydoc);
       return;
     }
 

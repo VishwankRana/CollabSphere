@@ -1115,7 +1115,28 @@ body.cs-resize-active--vertical {
 }
 
 .collaborative-code-editor {
+  position: relative;
   height: 100%;
+}
+
+.cs-offline-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  max-width: calc(100% - 32px);
+  padding: 10px 16px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 30;
+  pointer-events: none;
 }
 
 .collaborative-code-editor .monaco-editor,

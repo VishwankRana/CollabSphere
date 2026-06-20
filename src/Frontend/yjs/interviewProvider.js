@@ -2,6 +2,8 @@ import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { IndexeddbPersistence } from "y-indexeddb";
 
+export { attachYjsConnectionListeners, getConnectionStatus } from "./connectionStatus.js";
+
 export function createInterviewProvider(roomId) {
   const yjsRoomName = `interview-${roomId}`;
   const websocketUrl =

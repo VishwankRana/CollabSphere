@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   AlertTriangle,
@@ -53,7 +53,7 @@ export default function InterviewRoomPage() {
   const [endingInterview, setEndingInterview] = useState(false);
   const [endError, setEndError] = useState("");
   const [socketError, setSocketError] = useState("");
-  const [connectionStatus, setConnectionStatus] = useState("connecting");
+  const [collabStatus, setCollabStatus] = useState("connecting");
   const [runCount, setRunCount] = useState(0);
   const [elapsedMs, setElapsedMs] = useState(0);
 
@@ -80,6 +80,10 @@ export default function InterviewRoomPage() {
     max: 480,
     storageKey: "interview-output-height",
   });
+
+  const handleCollabStatusChange = useCallback((status) => {
+    setCollabStatus(status);
+  }, []);
 
   useEffect(() => {
     if (!id || !token) {
@@ -154,11 +158,9 @@ export default function InterviewRoomPage() {
 
     const handleConnect = () => {
       setSocketError("");
-      setConnectionStatus("synced");
     };
 
     const handleConnectError = (error) => {
-      setConnectionStatus("disconnected");
       const message = error?.message || "";
 
       if (message.includes("Authentication required")) {
@@ -175,8 +177,6 @@ export default function InterviewRoomPage() {
       if (reason === "io client disconnect") {
         return;
       }
-
-      setConnectionStatus("disconnected");
 
       setSocketError(
         "Lost connection to the interview server. Check that the backend is running and refresh the page."
@@ -443,7 +443,7 @@ export default function InterviewRoomPage() {
   return (
     <div className="cs-app">
       <AppTopBar
-        connectionStatus={connectionStatus}
+        connectionStatus={collabStatus}
         roomStatus={roomState.status}
         roomTitle={roomTitle}
         showActiveDot={roomState.status === "active"}
@@ -533,7 +533,7 @@ export default function InterviewRoomPage() {
                   </div>
 
                   <div className="cs-editor-topbar-right">
-                    <ConnectionStatusBadge status={connectionStatus} />
+                    <ConnectionStatusBadge status={collabStatus} />
                     <span className="cs-editor-divider" aria-hidden="true" />
                     <span className="cs-editor-run-count">
                       <Play size={12} strokeWidth={1.5} />
@@ -606,6 +606,7 @@ export default function InterviewRoomPage() {
                     starterCode={roomState.starterCode}
                     userName={user.name}
                     userRole={roomState.role}
+                    onCollabStatusChange={handleCollabStatusChange}
                   />
                 </div>
 

@@ -1,8 +1,8 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import Editor from "@monaco-editor/react";
 import { MonacoBinding } from "y-monaco";
 
-import { createInterviewProvider } from "../yjs/interviewProvider";
+import { attachMonacoAwarenessCursors } from "../lib/monacoAwarenessCursors";
 import {
   getAwarenessColor,
   getStarterCodeForLanguage,
@@ -10,6 +10,10 @@ import {
   MONACO_LANGUAGE_IDS,
 } from "../lib/interview";
 import { applyCodescreenMonacoTheme } from "../lib/monacoTheme";
+import {
+  attachYjsConnectionListeners,
+  createInterviewProvider,
+} from "../yjs/interviewProvider";
 
 const CollaborativeCodeEditor = forwardRef(function CollaborativeCodeEditor(
   {
@@ -19,6 +23,7 @@ const CollaborativeCodeEditor = forwardRef(function CollaborativeCodeEditor(
     userName = "Guest",
     userRole = "candidate",
     starterCode = {},
+    onCollabStatusChange,
     onEditorMount,
   },
   ref
@@ -32,6 +37,13 @@ const CollaborativeCodeEditor = forwardRef(function CollaborativeCodeEditor(
   const starterAppliedRef = useRef(false);
   const previousLanguageRef = useRef(language);
   const starterCodeRef = useRef(starterCode);
+  const offlineToastTimeoutRef = useRef(null);
+  const onCollabStatusChangeRef = useRef(onCollabStatusChange);
+  const [showOfflineToast, setShowOfflineToast] = useState(false);
+
+  useEffect(() => {
+    onCollabStatusChangeRef.current = onCollabStatusChange;
+  }, [onCollabStatusChange]);
 
   useEffect(() => {
     starterCodeRef.current = starterCode;
@@ -51,7 +63,24 @@ const CollaborativeCodeEditor = forwardRef(function CollaborativeCodeEditor(
       role: userRole,
     });
 
+    const detachCursorStyles = attachMonacoAwarenessCursors(provider.awareness);
+    const detachConnectionListeners = attachYjsConnectionListeners(provider, {
+      onStatusChange: (status) => {
+        onCollabStatusChangeRef.current?.(status);
+      },
+      onOffline: () => {
+        setShowOfflineToast(true);
+        window.clearTimeout(offlineToastTimeoutRef.current);
+        offlineToastTimeoutRef.current = window.setTimeout(() => {
+          setShowOfflineToast(false);
+        }, 4000);
+      },
+    });
+
     return () => {
+      window.clearTimeout(offlineToastTimeoutRef.current);
+      detachConnectionListeners();
+      detachCursorStyles();
       bindingRef.current?.destroy();
       bindingRef.current = null;
       indexeddbProvider.destroy();
@@ -201,6 +230,12 @@ const CollaborativeCodeEditor = forwardRef(function CollaborativeCodeEditor(
         }}
         theme="codescreen-dark"
       />
+
+      {showOfflineToast ? (
+        <div className="cs-offline-toast" role="status">
+          You&apos;re offline. Keep editing — changes will sync when you reconnect.
+        </div>
+      ) : null}
     </div>
   );
 });

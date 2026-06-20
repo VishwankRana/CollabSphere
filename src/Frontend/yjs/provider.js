@@ -2,6 +2,8 @@ import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { IndexeddbPersistence } from "y-indexeddb";
 
+export { attachYjsConnectionListeners, getConnectionStatus } from "./connectionStatus.js";
+
 export function createProvider(documentId) {
   const websocketUrl =
     import.meta.env.VITE_COLLAB_SERVER_URL ?? "ws://localhost:1234";
@@ -34,20 +36,4 @@ export function createProvider(documentId) {
   }
 
   return { provider, ydoc, indexeddbProvider };
-}
-
-export function getConnectionStatus(provider) {
-  if (!provider.wsconnected && !provider.wsconnecting) {
-    return "disconnected";
-  }
-
-  if (provider.synced) {
-    return "synced";
-  }
-
-  if (provider.wsconnecting) {
-    return "connecting";
-  }
-
-  return "connected";
 }
