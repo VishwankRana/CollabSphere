@@ -2265,6 +2265,9 @@ body.cs-resize-active--vertical {
 .sidebar-user-role {
   font-size: 11px;
   color: var(--text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .page-section {

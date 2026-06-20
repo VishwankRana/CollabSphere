@@ -1,5 +1,16 @@
 # Change Log
 
+## 2026-06-19 — Analytics back link, sidebar cleanup
+
+- **Timestamp:** 2026-06-19
+- **Files changed:**
+  - `src/Frontend/pages/InterviewAnalyticsPage.jsx`
+  - `src/Frontend/components/Sidebar.jsx`
+  - `src/Frontend/styles/codescreen.css`
+- **Summary of change:** Analytics back navigation now returns to the interview room page; removed Settings from the sidebar; replaced Interviewer label with the signed-in user's email.
+- **Impacted modules:** Analytics navigation, app sidebar
+- **Risk level:** Low
+
 ## 2026-06-19 — Output panel test cases, resize UX, chat layout polish
 
 - **Timestamp:** 2026-06-19

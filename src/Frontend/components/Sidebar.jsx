@@ -9,7 +9,6 @@ import {
   PanelLeftOpen,
   Play,
   Plus,
-  Settings,
 } from "lucide-react";
 
 import { useAuth } from "../auth/useAuth.jsx";
@@ -84,10 +83,6 @@ export default function Sidebar() {
   const workspaceNav = [{ to: "/#interview-list", label: "Replays", icon: Play }];
 
   function isActive(path, end = false) {
-    if (path === "/settings") {
-      return location.pathname === "/settings";
-    }
-
     if (path === "/") {
       return end && location.pathname === "/";
     }
@@ -165,16 +160,6 @@ export default function Sidebar() {
           </IconLabel>
         </button>
 
-        <Link
-          className="sidebar-item"
-          title={collapsed ? "Settings" : undefined}
-          to="/settings"
-        >
-          <IconLabel icon={Settings} size={18}>
-            {!collapsed ? "Settings" : null}
-          </IconLabel>
-        </Link>
-
         <button type="button" className="sidebar-item" onClick={handleSignOut}>
           <IconLabel icon={LogOut} size={18}>
             {!collapsed ? "Sign out" : null}
@@ -198,7 +183,7 @@ export default function Sidebar() {
           {!collapsed ? (
             <div className="sidebar-user-meta">
               <span className="sidebar-user-name">{user?.name || "User"}</span>
-              <span className="sidebar-user-role">Interviewer</span>
+              <span className="sidebar-user-role">{user?.email || ""}</span>
             </div>
           ) : null}
         </div>

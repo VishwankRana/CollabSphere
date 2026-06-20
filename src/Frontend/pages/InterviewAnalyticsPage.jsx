@@ -246,9 +246,9 @@ export default function InterviewAnalyticsPage() {
   return (
     <main className="interview-analytics-shell">
       <div className="page-section">
-        <Link className="cs-back-link" to="/">
+        <Link className="cs-back-link" to={`/rooms/${room.id}`}>
           <IconLabel icon={ArrowLeft} size={14}>
-            Interviews
+            Back to room
           </IconLabel>
         </Link>
         <h1 className="font-display">Interview Analytics</h1>
@@ -414,9 +414,9 @@ export default function InterviewAnalyticsPage() {
       </section>
 
       <div className="cs-analytics-footer page-section">
-        <Link className="btn-secondary" to="/">
+        <Link className="btn-secondary" to={`/rooms/${room.id}`}>
           <IconLabel icon={ArrowLeft} size={14}>
-            Back to Interviews
+            Back to room
           </IconLabel>
         </Link>
         <Link className="btn-primary" to={`/rooms/${room.id}/replay`}>
