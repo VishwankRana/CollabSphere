@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  Clock,
+  BookOpen,
   HelpCircle,
   LayoutDashboard,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
-  Play,
   Plus,
 } from "lucide-react";
 
@@ -65,24 +64,17 @@ export default function Sidebar() {
     navigate("/login");
   }
 
-  function scrollToRecent() {
-    if (location.pathname === "/") {
-      document.getElementById("interview-list")?.scrollIntoView({ behavior: "smooth" });
-      return;
-    }
-
-    navigate("/#interview-list");
-  }
-
   const mainNav = [
     { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
+    { to: "/question-bank", label: "Question Bank", icon: BookOpen },
     { to: "/rooms/new", label: "New Interview", icon: Plus },
-    { onClick: scrollToRecent, label: "Recent", icon: Clock },
   ];
 
-  const workspaceNav = [{ to: "/#interview-list", label: "Replays", icon: Play }];
-
   function isActive(path, end = false) {
+    if (path === "/question-bank") {
+      return location.pathname.startsWith("/question-bank");
+    }
+
     if (path === "/") {
       return end && location.pathname === "/";
     }
@@ -94,45 +86,7 @@ export default function Sidebar() {
     <aside className={`sidebar${collapsed ? " sidebar--collapsed" : ""}`}>
       <nav className="sidebar-nav" aria-label="Main navigation">
         {mainNav.map((item) => {
-          const active = item.to ? isActive(item.to, item.end) : false;
-          const className = `sidebar-item${active ? " sidebar-item--active" : ""}`;
-
-          if (item.onClick) {
-            return (
-              <button
-                key={item.label}
-                type="button"
-                className={className}
-                title={collapsed ? item.label : undefined}
-                onClick={item.onClick}
-              >
-                <IconLabel icon={item.icon} size={18}>
-                  {!collapsed ? item.label : null}
-                </IconLabel>
-              </button>
-            );
-          }
-
-          return (
-            <Link
-              key={item.label}
-              className={className}
-              title={collapsed ? item.label : undefined}
-              to={item.to}
-            >
-              <IconLabel icon={item.icon} size={18}>
-                {!collapsed ? item.label : null}
-              </IconLabel>
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="sidebar-section-label">{collapsed ? "..." : "WORKSPACE"}</div>
-
-      <nav className="sidebar-nav" aria-label="Workspace navigation">
-        {workspaceNav.map((item) => {
-          const active = isActive(item.to);
+          const active = isActive(item.to, item.end);
           return (
             <Link
               key={item.label}

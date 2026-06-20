@@ -1,5 +1,35 @@
 # Change Log
 
+## 2026-06-21 — Question Bank full feature
+
+- **Timestamp:** 2026-06-21
+- **Files changed:**
+  - `src/Backend/models/Question.js`
+  - `src/Backend/seed/seedQuestionsData.js`
+  - `src/Backend/seed/questions.js`
+  - `src/Backend/routes/questions.js`
+  - `src/Backend/Server.js`
+  - `package.json`
+  - `src/Frontend/lib/questionBank.js`
+  - `src/Frontend/pages/QuestionBankPage.jsx`
+  - `src/Frontend/pages/QuestionFormPage.jsx`
+  - `src/Frontend/pages/CreateInterviewRoomPage.jsx`
+  - `src/Frontend/components/Sidebar.jsx`
+  - `src/Frontend/App.jsx`
+  - `src/Frontend/styles/codescreen.css`
+- **Summary of change:** Full Question Bank with MongoDB model, seed script, API routes, listing UI with filters/detail panel, custom problem form, room creation integration, and sidebar nav.
+- **Impacted modules:** Question bank, interview creation, backend API
+- **Risk level:** Medium
+
+## 2026-06-21 — Question bank seed data module
+
+- **Timestamp:** 2026-06-21
+- **Files changed:**
+  - `src/Backend/seed/seedQuestionsData.js` (new)
+- **Summary of change:** Added ES module export of 16 built-in LeetCode-style seed questions (6 Easy, 7 Medium, 3 Hard) with descriptions, examples, constraints, multi-language starter code, and test cases for MongoDB seeding.
+- **Impacted modules:** Question bank seed script
+- **Risk level:** Low
+
 ## 2026-06-19 — Interview Yjs collab: cursors, offline sync, persistence
 
 - **Timestamp:** 2026-06-19

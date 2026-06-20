@@ -9,7 +9,8 @@
     "start": "node src/Backend/Server.js",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "seed:questions": "node --env-file=.env src/Backend/seed/questions.js"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

@@ -12,6 +12,8 @@ import InterviewReplayPage from "./pages/InterviewReplayPage.jsx";
 import InterviewRoomPage from "./pages/InterviewRoomPage.jsx";
 import JoinInterviewPage from "./pages/JoinInterviewPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
+import QuestionBankPage from "./pages/QuestionBankPage.jsx";
+import QuestionFormPage from "./pages/QuestionFormPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import SignupPage from "./pages/SignupPage.jsx";
 
@@ -41,6 +43,9 @@ function App() {
             />
             <Route path="/docs/:id" element={<DocumentPage />} />
             <Route path="/rooms/new" element={<CreateInterviewRoomPage />} />
+            <Route path="/question-bank" element={<QuestionBankPage />} />
+            <Route path="/question-bank/new" element={<QuestionFormPage />} />
+            <Route path="/question-bank/:id/edit" element={<QuestionFormPage />} />
             <Route path="/join/:inviteToken" element={<JoinInterviewPage />} />
             <Route path="/rooms/:id/analytics" element={<InterviewAnalyticsPage />} />
             <Route path="/rooms/:id/ended" element={<InterviewEndedPage />} />

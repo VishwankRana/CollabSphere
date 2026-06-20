@@ -26,6 +26,7 @@ import {
   trackDocumentUpdate,
 } from "./versionHistory.js";
 import { createRoomsRouter, setInterviewSocketIO } from "./routes/rooms.js";
+import { createQuestionsRouter } from "./routes/questions.js";
 import { registerRoomHandlers } from "./socket/roomHandler.js";
 
 // process.loadEnvFile?.(".env");
@@ -601,6 +602,7 @@ app.post(
 );
 
 app.use("/api/rooms", createRoomsRouter(authenticateRequest));
+app.use("/api/questions", createQuestionsRouter(authenticateRequest));
 
 wss.on("connection", async (conn, req) => {
   try {
